@@ -5,6 +5,8 @@ from drf_spectacular.utils import extend_schema
 from modules.document.application.use_cases.create_document import CreateDocumentUseCase
 from modules.document.application.dtos import CreateDocumentDTO
 from modules.document.infrastructure.repositories.document_repository_django import DjangoDocumentRepository
+from modules.company.infrastructure.repositories.company_repository_django import DjangoCompanyRepository
+from modules.document.infrastructure.adapters.zapsign_client_http import HttpZapSignClient
 from .serializers import DocumentCreateSerializer, DocumentSerializer, DocumentUpdateSerializer
 
 
@@ -29,7 +31,12 @@ class DocumentViewSet(mixins.ListModelMixin,
         serializer = DocumentCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
-        result = CreateDocumentUseCase(DjangoDocumentRepository()).execute(CreateDocumentDTO(**data))
+        use_case = CreateDocumentUseCase(
+            document_repository=DjangoDocumentRepository(),
+            company_repository=DjangoCompanyRepository(),
+            zap_sign_client=HttpZapSignClient(),
+        )
+        result = use_case.execute(CreateDocumentDTO(**data))
         return Response(DocumentSerializer(result).data, status=status.HTTP_201_CREATED)
 
     @extend_schema(tags=["Document"], responses=DocumentSerializer(many=True))

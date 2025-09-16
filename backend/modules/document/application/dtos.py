@@ -20,3 +20,10 @@ class CreateDocumentDTO:
     pdf_url: str
 
 
+@dataclass
+class ZapSignCreateResult:
+    open_id: Optional[str]
+    token: Optional[str]
+    status: Optional[str]
+
+

@@ -1,5 +1,5 @@
 from typing import Protocol, Optional
-from .dtos import DocumentDTO
+from .dtos import DocumentDTO, ZapSignCreateResult
 
 
 class DocumentRepository(Protocol):
@@ -8,4 +8,8 @@ class DocumentRepository(Protocol):
     def list_all(self) -> list[DocumentDTO]: ...
     def update_partial(self, document_id: int, **fields) -> Optional[DocumentDTO]: ...
     def delete(self, document_id: int) -> bool: ...
+
+
+class ZapSignClient(Protocol):
+    def create(self, api_token: str, name: str, pdf_url: str) -> ZapSignCreateResult: ...
 
