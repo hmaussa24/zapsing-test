@@ -10,8 +10,8 @@ class InMemoryDocumentRepository(DocumentRepository):
         self._items: list[DocumentDTO] = []
         self._auto_id = 1
 
-    def create(self, name: str, pdf_url: str) -> DocumentDTO:
-        doc = DocumentDTO(id=self._auto_id, name=name, pdf_url=pdf_url, status="created", open_id=None, token=None)
+    def create(self, company_id: int, name: str, pdf_url: str) -> DocumentDTO:
+        doc = DocumentDTO(id=self._auto_id, company_id=company_id, name=name, pdf_url=pdf_url, status="created", open_id=None, token=None)
         self._items.append(doc)
         self._auto_id += 1
         return doc
@@ -24,12 +24,13 @@ def test_create_document_use_case_creates_document():
     repo = InMemoryDocumentRepository()
     use_case = CreateDocumentUseCase(document_repository=repo)
 
-    dto_in = CreateDocumentDTO(name="Contrato", pdf_url="https://example.com/doc.pdf")
+    dto_in = CreateDocumentDTO(company_id=1, name="Contrato", pdf_url="https://example.com/doc.pdf")
     result = use_case.execute(dto_in)
 
     assert isinstance(result, DocumentDTO)
     assert result.id == 1
     assert result.name == "Contrato"
     assert result.pdf_url == "https://example.com/doc.pdf"
+    assert result.company_id == 1
     assert result.status == "created"
 

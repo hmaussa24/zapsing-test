@@ -1,0 +1,9 @@
+from typing import Protocol, Optional
+from .dtos import DocumentDTO
+
+
+class DocumentRepository(Protocol):
+    def create(self, company_id: int, name: str, pdf_url: str) -> DocumentDTO: ...
+    def get_by_id(self, document_id: int) -> Optional[DocumentDTO]: ...
+    def list_all(self) -> list[DocumentDTO]: ...
+

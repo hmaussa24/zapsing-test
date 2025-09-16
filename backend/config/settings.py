@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'drf_spectacular',
     'modules.company.infrastructure.django_app',
+    'modules.document.infrastructure.django_app',
 ]
 
 MIDDLEWARE = [
