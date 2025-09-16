@@ -21,4 +21,18 @@ class DjangoDocumentRepository(DocumentRepository):
             for o in Document.objects.all().order_by('id')
         ]
 
+    def update_partial(self, document_id: int, **fields) -> DocumentDTO | None:
+        try:
+            obj = Document.objects.get(id=document_id)
+        except Document.DoesNotExist:  # type: ignore[attr-defined]
+            return None
+        for k, v in fields.items():
+            setattr(obj, k, v)
+        obj.save(update_fields=list(fields.keys()))
+        return DocumentDTO(id=obj.id, company_id=obj.company_id, name=obj.name, pdf_url=obj.pdf_url, status=obj.status, open_id=obj.open_id, token=obj.token)
+
+    def delete(self, document_id: int) -> bool:
+        deleted, _ = Document.objects.filter(id=document_id).delete()
+        return deleted > 0
+
 

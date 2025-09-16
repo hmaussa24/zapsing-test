@@ -17,3 +17,9 @@ class DocumentSerializer(serializers.Serializer):
     token = serializers.CharField(allow_null=True, required=False)
 
 
+class DocumentUpdateSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=255, required=False)
+    pdf_url = serializers.URLField(required=False)
+    status = serializers.CharField(required=False)
+
+
