@@ -1,0 +1,77 @@
+---
+description: Regla de estilo para APIs DRF “senior” (GenericViewSet + serializers por acción + Spectacular)
+globs:
+  - "backend/modules/**/api/**"
+alwaysApply: true
+---
+
+### Objetivo
+Estandarizar adaptadores de entrada DRF en arquitectura hexagonal: ViewSets delgados, contratos claros por acción, documentación automática limpia.
+
+### Principios
+- Usar `GenericViewSet` + mixins (`ListModelMixin`, `RetrieveModelMixin`, `CreateModelMixin`, `UpdateModelMixin`, `DestroyModelMixin`).
+- Seleccionar serializer por acción con `get_serializer_class()`.
+- No incluir lógica de negocio en el ViewSet; delegar a casos de uso (capa `application`).
+- Documentación con drf-spectacular minimalista; ejemplos en módulo dedicado.
+- `SPECTACULAR_SETTINGS.COMPONENT_SPLIT_REQUEST = True` (ya configurado) para separar request/response.
+
+### Estructura esperada
+- `modules/<feature>/api/serializers.py`:
+  - `*ReadSerializer` (respuesta), `*CreateSerializer` (request), `*UpdateSerializer` (request parcial/total).
+- `modules/<feature>/api/schema_examples.py`:
+  - Constantes `OpenApiExample` reutilizables (request/response típicos).
+- `modules/<feature>/api/views.py`:
+  - `class <Feature>ViewSet(GenericViewSet + mixins)`
+  - `get_serializer_class()` con mapeo por acción: `{ list: Read, retrieve: Read, create: Create, partial_update: Update, update: Update }`.
+  - Métodos delegan en casos de uso/repositorios.
+
+### Guía de implementación (ejemplo)
+```python
+from rest_framework import viewsets, mixins, status
+from rest_framework.response import Response
+from drf_spectacular.utils import extend_schema
+
+from .serializers import FeatureReadSerializer, FeatureCreateSerializer, FeatureUpdateSerializer
+from ..application.use_cases.create_feature import CreateFeatureUseCase
+from ..infrastructure.repositories.feature_repository_django import DjangoFeatureRepository
+
+
+class FeatureViewSet(mixins.ListModelMixin,
+                     mixins.RetrieveModelMixin,
+                     mixins.CreateModelMixin,
+                     mixins.UpdateModelMixin,
+                     mixins.DestroyModelMixin,
+                     viewsets.GenericViewSet):
+    def get_serializer_class(self):
+        mapping = {
+            'list': FeatureReadSerializer,
+            'retrieve': FeatureReadSerializer,
+            'create': FeatureCreateSerializer,
+            'partial_update': FeatureUpdateSerializer,
+            'update': FeatureUpdateSerializer,
+        }
+        return mapping.get(self.action, FeatureReadSerializer)
+
+    @extend_schema(tags=["Feature"], responses=FeatureReadSerializer(many=True))
+    def list(self, request, *args, **kwargs):
+        items = DjangoFeatureRepository().list_all()
+        data = FeatureReadSerializer(items, many=True).data
+        return Response(data)
+
+    @extend_schema(tags=["Feature"], request=FeatureCreateSerializer, responses={201: FeatureReadSerializer})
+    def create(self, request, *args, **kwargs):
+        serializer = FeatureCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        result = CreateFeatureUseCase(DjangoFeatureRepository()).execute(serializer.validated_data)
+        return Response(FeatureReadSerializer(result).data, status=status.HTTP_201_CREATED)
+```
+
+### Anotaciones y ejemplos
+- Mover `OpenApiExample` a `schema_examples.py` y referenciarlos desde el ViewSet con `@extend_schema(examples=[...])`.
+- Evitar repetir ejemplos inline; mantener contratos en serializers.
+
+### Antipatrones a evitar
+- Instanciar casos de uso/infra con side effects globales; preferir factorías o métodos privados `get_*()` para facilitar testing.
+- Poner lógica de negocio en el ViewSet.
+- Multiplicar serializers innecesariamente; request/response separados solo cuando divergen.
+

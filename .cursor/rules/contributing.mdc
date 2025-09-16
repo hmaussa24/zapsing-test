@@ -1,0 +1,114 @@
+---
+description: Guía de Contribución — convertida a rule de Cursor (flujo, TDD, SOLID, hexagonal, PRs)
+globs:
+  - "**/*"
+alwaysApply: true
+---
+
+### Objetivo
+Estandarizar cómo trabajamos utilizando Cursor, con foco en TDD, arquitectura hexagonal, SOLID, patrones, LLMs/MCP y repos FE/BE independientes.
+
+### Flujo de trabajo en Cursor
+- Status update breve en cada turno: qué harás y por qué.
+- Descubrimiento antes de editar: búsquedas semánticas y exactas en paralelo.
+- Edits pequeños y atómicos: cambios mínimos, enfocados y revertibles.
+- Resumen corto al cierre: cambios y su impacto.
+
+### Gestión de tareas (TODOs)
+- Tareas atómicas, verb-led y claras; solo una `in_progress` a la vez.
+- Marcar `completed` inmediatamente tras finalizar; cancelar si no aplica.
+
+### Arquitectura y principios
+- Hexagonal (puertos/adaptadores): dominio y casos de uso aislados de frameworks.
+- SOLID y patrones aplicados: Repository, Strategy, Adapter/Facade, Factory, Decorator (donde aporte valor).
+- Repos separados: frontend y backend con pipelines propios.
+
+### TDD y pruebas
+- Ciclo Red → Green → Refactor en todas las capas.
+- Backend (Django/DRF): Pytest, `pytest-django`, `factory_boy`, `respx`, `pytest-cov`.
+- Frontend (Angular): Jest + Testing Library, `HttpClientTestingModule`/MSW, coverage gates.
+- Contratos: OpenAPI como fuente de verdad; generación de tipos para FE.
+
+### Estilo de código
+- Nombres descriptivos; early returns; manejo real de errores.
+- Evitar nesting profundo y comentarios triviales; respetar formato existente.
+
+### Commits, ramas y PRs
+- Ramas por feature: `feat/<area>-<breve-desc>`; fixes: `fix/<area>-<desc>`.
+- Commits atómicos en imperativo: `feat(api): crear documento via ZapSign`.
+- PR checklist:
+  - [ ] Tests pasan y cobertura OK (gates activos).
+  - [ ] Linter sin errores.
+  - [ ] OpenAPI actualizado (si aplica).
+  - [ ] Documentación/README ajustada (si aplica).
+  - [ ] Impactos en seguridad/observabilidad considerados.
+
+### Uso de herramientas (Cursor)
+- Búsqueda principal semántica; para exactos usa grep.
+- Paraleliza lecturas/búsquedas independientes.
+- Proponer comandos no interactivos y con flags adecuados.
+- Citas de código: bloques con ruta/líneas; código nuevo con bloque y lenguaje.
+
+### LLMs y MCP
+- LLMs para análisis de documentos: salidas validadas por JSON Schema; logs con masking.
+- MCP servers recomendados: `zapsign-mcp`, `db-mcp`, `llm-mcp`, `n8n-mcp` con scopes mínimos.
+- Seguridad: API keys en entorno seguro; auditoría de uso.
+
+### Observabilidad y seguridad
+- Logging JSON estructurado; métricas básicas y tracing/correlation id.
+- Autenticación y autorización por Company (multitenancy); CORS, rate limiting y validación de I/O.
+
+### Convenciones FE/BE
+- Backend: DRF ViewSets/Serializers como adaptadores; casos de uso en `application`.
+- Frontend: Angular con componentes reactivos, servicios y estado con RxJS.
+
+### Cómo empezar
+1. Lee `INSTRUCTION.MD`, `PLAN_DE_EJECUCION.md` y `/.cursor/rules/rules.mdc`.
+2. Abre una rama `feat/<tu-feature>`.
+3. Escribe tests (rojo), implementa (verde), refactoriza.
+4. Ejecuta linters y cobertura.
+5. Abre PR con checklist completa.
+
+### Arquitectura hexagonal por módulos (backend)
+- Guía: `backend/ARCHITECTURE.md`.
+- Módulos requeridos: `modules/company`, `modules/document`, `modules/signer`.
+- Capas por módulo: `domain`, `application`, `infrastructure`, `api`.
+- Los ViewSets DRF delegan siempre en casos de uso de `application` y no contienen reglas de negocio.
+
+```mermaid
+flowchart LR
+  subgraph FE[Frontend Angular]
+    FE_UI[UI Reactiva]
+    FE_SRV[Servicios HTTP / Facade]
+  end
+
+  subgraph BE[Backend Django + DRF]
+    direction TB
+    subgraph MCompany[Módulo Company]
+      C_API[API]
+      C_APP[Application]
+      C_DOM[Domain]
+      C_INF[Infrastructure]
+    end
+    subgraph MDocument[Módulo Document]
+      D_API[API]
+      D_APP[Application]
+      D_DOM[Domain]
+      D_INF[Infrastructure (ORM, ZapSign Adapter, Analyzer Strategy)]
+    end
+    subgraph MSigner[Módulo Signer]
+      S_API[API]
+      S_APP[Application]
+      S_DOM[Domain]
+      S_INF[Infrastructure]
+    end
+  end
+
+  FE_SRV -->|REST| C_API
+  FE_SRV -->|REST| D_API
+  FE_SRV -->|REST| S_API
+  D_INF -->|HTTP Adapter| ZAPSIGN[(ZapSign API)]
+  D_INF -->|Strategy| AI[(Proveedor IA/LLM)]
+  BE --> DB[(PostgreSQL)]
+  BE --> N8N[(n8n)]
+```

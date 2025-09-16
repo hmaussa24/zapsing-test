@@ -1,0 +1,50 @@
+---
+description: Reglas unificadas ZapSign para Cursor (FE/BE, hexagonal, SOLID, TDD, OpenAPI, LLMs/MCP)
+globs:
+  - "**/*"
+alwaysApply: true
+---
+
+### Principios
+- **Arquitectura (backend)**: hexagonal por módulo (`domain`, `application`, `infrastructure`, `api`).
+- **Arquitectura (frontend)**: módulos con servicios, componentes y `facade`; `adapter` para API.
+- **SOLID y patrones**:
+  - Backend: Adapter, Strategy, Repository, Factory, Decorator.
+  - Frontend: Facade, Adapter, Strategy (state), Observer (RxJS).
+- **TDD**: escribir tests antes de implementar; cobertura mínima: BE ≥ 85%, FE ≥ 80%.
+- **Contratos**: OpenAPI como fuente de verdad; generar tipos para FE.
+- **LLMs/MCP**: IA vía puertos; herramientas MCP con scopes mínimos y sin acceso directo a infraestructura.
+
+### Convenciones
+- Backend (Django/DRF):
+  - Nombres: archivos `snake_case.py`, clases `PascalCase`, funciones `snake_case`, constantes `UPPER_SNAKE_CASE`.
+  - Carpetas: `backend/modules/<module>/{domain,application,infrastructure,api}`.
+- Frontend (Angular):
+  - Nombres: archivos `kebab-case.ts`, clases `PascalCase`, funciones `camelCase`, constantes `UPPER_SNAKE_CASE`.
+  - Carpetas: `frontend/app/modules/<feature>`, `frontend/app/shared/{services,components,models}`.
+
+### Testing
+- Backend (Pytest): capas `domain`, `application (mocks)`, `infrastructure (db/http mocks)`, `api`.
+  - Reglas: tests primero para casos de uso y adaptadores; mocks/stubs para ZapSign e IA; contratos OpenAPI guían serialización.
+- Frontend (Jest + Testing Library): servicios HTTP (HttpTestingController/MSW), componentes, flujos RxJS.
+
+### API y adaptadores
+- Backend:
+  - DRF ViewSets/Serializers como adaptadores de entrada; sin lógica de negocio, delegan a casos de uso.
+  - HTTP Adapter ZapSign con reintentos/timeouts y logging estructurado; Strategy para IA con Factory.
+  - Repository para persistencia con mapeo DTOs ↔ entidades de dominio.
+- Frontend:
+  - Servicios tipados + interceptores de auth/logging; respuestas adaptadas a modelos de UI.
+  - Lista/documentos sin recarga: estado local/signals o NgRx si aplica.
+
+### Seguridad y multitenancy
+- Autenticación (JWT/Token) y autorización por `Company` (scoping en repos y endpoints).
+- Validación estricta de entrada/salida y sanitización; CORS y rate limiting básico.
+
+### Observabilidad
+- Logging JSON estructurado; métricas (latencias, tasas de error, llamadas externas); tracing/correlation id.
+
+### Cumplimiento en PRs
+- Tests pasan y cobertura cumple umbral; linter OK.
+- OpenAPI actualizado si cambia la API; documentación ajustada cuando aplique.
+- Checklist de SOLID/patrones aplicado; cambios atómicos y revertibles.
