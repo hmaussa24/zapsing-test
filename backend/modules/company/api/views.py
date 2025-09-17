@@ -2,10 +2,13 @@ from rest_framework import viewsets, status, mixins
 from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiExample
 
-from modules.company.application.use_cases.create_company import CreateCompanyUseCase
 from modules.company.application.dtos import CreateCompanyDTO
-from modules.company.infrastructure.repositories.company_repository_django import (
-    DjangoCompanyRepository,
+from modules.company.api.container import (
+    make_create_company_use_case,
+    make_list_companies_use_case,
+    make_get_company_use_case,
+    make_update_company_partial_use_case,
+    make_delete_company_use_case,
 )
 from .serializers import CompanyCreateSerializer, CompanySerializer, CompanyUpdateSerializer
 
@@ -31,15 +34,13 @@ class CompanyViewSet(mixins.ListModelMixin,
         return mapping.get(self.action, CompanySerializer)
     @extend_schema(tags=["Company"], responses=CompanySerializer(many=True), description="Lista todas las compañías")
     def list(self, request, *args, **kwargs):
-        repo = DjangoCompanyRepository()
-        items = repo.list_all()
+        items = make_list_companies_use_case().execute()
         data = [CompanySerializer(i).data for i in items]
         return Response(data)
 
     @extend_schema(tags=["Company"], responses=CompanySerializer, description="Obtiene detalle de una compañía")
     def retrieve(self, request, pk=None, *args, **kwargs):
-        repo = DjangoCompanyRepository()
-        item = repo.get_by_id(int(pk))
+        item = make_get_company_use_case().execute(int(pk))
         if not item:
             return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
         return Response(CompanySerializer(item).data)
@@ -50,8 +51,7 @@ class CompanyViewSet(mixins.ListModelMixin,
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
-        use_case = CreateCompanyUseCase(company_repository=DjangoCompanyRepository())
-        result = use_case.execute(CreateCompanyDTO(**data))
+        result = make_create_company_use_case().execute(CreateCompanyDTO(**data))
 
         return Response(CompanySerializer(result).data, status=status.HTTP_201_CREATED)
 
@@ -59,16 +59,14 @@ class CompanyViewSet(mixins.ListModelMixin,
     def partial_update(self, request, pk=None, *args, **kwargs):
         serializer = CompanyUpdateSerializer(data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
-        repo = DjangoCompanyRepository()
-        updated = repo.update_partial(int(pk), **serializer.validated_data)
+        updated = make_update_company_partial_use_case().execute(int(pk), **serializer.validated_data)
         if not updated:
             return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
         return Response(CompanySerializer(updated).data)
 
     @extend_schema(tags=["Company"], responses={204: None, 404: None})
     def destroy(self, request, pk=None, *args, **kwargs):
-        repo = DjangoCompanyRepository()
-        ok = repo.delete(int(pk))
+        ok = make_delete_company_use_case().execute(int(pk))
         status_code = status.HTTP_204_NO_CONTENT if ok else status.HTTP_404_NOT_FOUND
         return Response(status=status_code)
 

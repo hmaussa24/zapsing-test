@@ -1,14 +1,14 @@
 from dataclasses import dataclass
 from typing import Optional
 from ..dtos import CreateDocumentDTO, DocumentDTO
-from ..ports import DocumentRepository, ZapSignClient
-from modules.company.application.ports import CompanyRepository
+from ..ports import DocumentCommandRepository, ZapSignClient
+from modules.company.application.ports import CompanyQueryRepository
 
 
 @dataclass
 class CreateDocumentUseCase:
-    document_repository: DocumentRepository
-    company_repository: Optional[CompanyRepository] = None
+    document_repository: DocumentCommandRepository
+    company_repository: Optional[CompanyQueryRepository] = None
     zap_sign_client: Optional[ZapSignClient] = None
 
     def execute(self, dto: CreateDocumentDTO) -> DocumentDTO:

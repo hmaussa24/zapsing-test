@@ -1,10 +1,10 @@
-from modules.document.application.ports import DocumentRepository, ListDocumentsQuery
+from modules.document.application.ports import DocumentCommandRepository, DocumentQueryRepository, ListDocumentsQuery
 from modules.document.application.dtos import DocumentDTO, PageDTO
 from modules.document.infrastructure.django_app.models import Document
 from modules.document.infrastructure.mappers import orm_to_dto
 
 
-class DjangoDocumentRepository(DocumentRepository):
+class DjangoDocumentRepository(DocumentCommandRepository, DocumentQueryRepository):
     def create(self, company_id: int, name: str, pdf_url: str) -> DocumentDTO:
         obj = Document.objects.create(company_id=company_id, name=name, pdf_url=pdf_url)
         return orm_to_dto(obj)

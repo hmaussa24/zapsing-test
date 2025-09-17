@@ -2,12 +2,12 @@ from dataclasses import dataclass
 from typing import Optional
 
 from ..dtos import DocumentDTO, PageDTO
-from ..ports import DocumentRepository, ListDocumentsQuery
+from ..ports import DocumentQueryRepository, ListDocumentsQuery
 
 
 @dataclass
 class ListDocumentsUseCase:
-    document_repository: DocumentRepository
+    document_repository: DocumentQueryRepository
 
     def execute(self, *, company_id: Optional[int] = None, page: int = 1, page_size: int = 10, order_by: str = 'created_at', order_dir: str = 'desc') -> PageDTO:
         query = ListDocumentsQuery(
