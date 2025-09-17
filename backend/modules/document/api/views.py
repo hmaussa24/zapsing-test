@@ -102,8 +102,14 @@ class DocumentViewSet(mixins.ListModelMixin,
     @action(detail=True, methods=['post'], url_path='send_to_sign')
     @extend_schema(tags=["Document"], responses=DocumentSerializer)
     def send_to_sign(self, request, pk=None, *args, **kwargs):
+        cid = company_id_from_request(request)
+        if not cid:
+            return Response({"detail": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
         doc_commands: DocumentCommandRepository = DjangoDocumentRepository()
         doc_queries: DocumentQueryRepository = DjangoDocumentRepository()
+        current = make_get_document_use_case().execute(int(pk))
+        if not current or current.company_id != cid:
+            return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
         use_case = SendDocumentToSignUseCase(
             document_commands=doc_commands,
             document_queries=doc_queries,
@@ -119,6 +125,12 @@ class DocumentViewSet(mixins.ListModelMixin,
     @action(detail=True, methods=['get'], url_path='analysis')
     @extend_schema(tags=["Document"], responses={200: None, 404: None})
     def analysis(self, request, pk=None, *args, **kwargs):
+        cid = company_id_from_request(request)
+        if not cid:
+            return Response({"detail": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
+        current = make_get_document_use_case().execute(int(pk))
+        if not current or current.company_id != cid:
+            return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
         repo = DjangoAnalysisRepository()
         dto = repo.get_by_document_id(int(pk))
         if not dto:

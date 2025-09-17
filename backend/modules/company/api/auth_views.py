@@ -3,11 +3,44 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.hashers import make_password, check_password
 import json
 
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from drf_spectacular.utils import extend_schema, OpenApiExample
+
 from modules.company.infrastructure.django_app.models import Company
 from .token import encode, decode
+from .serializers import (
+    CompanyRegisterRequestSerializer,
+    CompanyRegisterResponseSerializer,
+    CompanyLoginRequestSerializer,
+    CompanyLoginResponseSerializer,
+    CompanyMeResponseSerializer,
+)
 
 
 @csrf_exempt
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@extend_schema(
+    tags=["Company Auth"],
+    request=CompanyRegisterRequestSerializer,
+    responses={
+        201: CompanyRegisterResponseSerializer,
+        400: None,
+    },
+    examples=[
+        OpenApiExample(
+            'Registro ejemplo',
+            value={"name": "Acme Corp", "email": "admin@acme.com", "password": "SecurePassword123"},
+            request_only=True,
+        ),
+        OpenApiExample(
+            'Respuesta registro',
+            value={"id": 1, "name": "Acme Corp", "email": "admin@acme.com"},
+            response_only=True,
+        ),
+    ],
+)
 def register(request: HttpRequest):
     if request.method != 'POST':
         return JsonResponse({'detail': 'Method not allowed'}, status=405)
@@ -32,6 +65,28 @@ def register(request: HttpRequest):
 
 
 @csrf_exempt
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@extend_schema(
+    tags=["Company Auth"],
+    request=CompanyLoginRequestSerializer,
+    responses={
+        200: CompanyLoginResponseSerializer,
+        400: None,
+    },
+    examples=[
+        OpenApiExample(
+            'Login ejemplo',
+            value={"email": "admin@acme.com", "password": "SecurePassword123"},
+            request_only=True,
+        ),
+        OpenApiExample(
+            'Respuesta login',
+            value={"access": "<jwt>"},
+            response_only=True,
+        ),
+    ],
+)
 def login(request: HttpRequest):
     if request.method != 'POST':
         return JsonResponse({'detail': 'Method not allowed'}, status=405)
@@ -51,6 +106,10 @@ def login(request: HttpRequest):
     return JsonResponse({'access': token}, status=200)
 
 
+@extend_schema(
+    tags=["Company Auth"],
+    responses={200: CompanyMeResponseSerializer, 401: None},
+)
 def me(request: HttpRequest):
     auth = request.META.get('HTTP_AUTHORIZATION') or ''
     if not auth.startswith('Bearer '):
