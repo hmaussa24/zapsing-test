@@ -3,6 +3,7 @@ from typing import Optional
 from ..dtos import CreateDocumentDTO, DocumentDTO
 from ..ports import DocumentCommandRepository, ZapSignClient
 from modules.company.application.ports import CompanyQueryRepository
+from modules.analysis.application.ports import AutomationNotifier
 
 
 @dataclass
@@ -10,9 +11,22 @@ class CreateDocumentUseCase:
     document_repository: DocumentCommandRepository
     company_repository: Optional[CompanyQueryRepository] = None
     zap_sign_client: Optional[ZapSignClient] = None
+    automation_notifier: Optional[AutomationNotifier] = None
 
     def execute(self, dto: CreateDocumentDTO) -> DocumentDTO:
         doc = self.document_repository.create(company_id=dto.company_id, name=dto.name, pdf_url=dto.pdf_url)
+
+        # Best-effort: notificar a n8n (no bloquear si falla)
+        if self.automation_notifier:
+            try:
+                self.automation_notifier.notify_document_created(
+                    document_id=doc.id,  # type: ignore[arg-type]
+                    company_id=dto.company_id,
+                    name=dto.name,
+                    pdf_url=dto.pdf_url,
+                )
+            except Exception:
+                pass
 
         # Si no se inyectan dependencias externas, terminar aquí (permite tests unitarios sin mocks)
         if not self.company_repository or not self.zap_sign_client:
@@ -22,17 +36,7 @@ class CreateDocumentUseCase:
         if not company:
             return doc
 
-        result = None #self.zap_sign_client.create(api_token=company.api_token, name=dto.name, pdf_url=dto.pdf_url)
-
-        #if result.open_id or result.token or result.status:
-        #    updated = self.document_repository.update_partial(
-        #        doc.id,
-        #        open_id=result.open_id,
-        #        token=result.token,
-        #        status=result.status or doc.status,
-        #    )
-        #    if updated:
-        #        return updated
+        result = None  # integración de creación en ZapSign no usada aquí
         return doc
 
 

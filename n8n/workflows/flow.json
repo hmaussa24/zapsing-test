@@ -1,0 +1,158 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "analysis-in",
+        "options": {
+          "responseData": {
+            "response": "json",
+            "responseBody": {
+              "received": true
+            }
+          }
+        }
+      },
+      "id": "2e5aa696-d61a-4753-967d-bae2b963324a",
+      "name": "Webhook (analysis-in)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "5c11411d-7394-4ecb-a3c0-e3d5d47da93a"
+    },
+    {
+      "parameters": {
+        "functionCode": "const payload = $json.body ?? $json;          // Webhook entrega en body\nconst doc = payload.document ?? {};           // viene del backend\nconst event = payload.event ?? 'document_created';\n\nconst summary = `Resumen para ${doc.name || 'Documento'}`;\nconst labels = ['contrato','legal'];\nconst entities = [];\nconst risk_score = 0.12;\n\nreturn [{\n  event,\n  document: {\n    id: doc.id,\n    company_id: doc.company_id,\n    name: doc.name,\n    pdf_url: doc.pdf_url,\n  },\n  analysis: { summary, labels, entities, risk_score, status: 'done' }\n}];"
+      },
+      "id": "cf662425-eff0-440d-b210-c5811aa489bd",
+      "name": "Analyze (mock)",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        304,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "const headers = $json.headers || {};\nconst key = headers['x-automation-key'] || headers['X-Automation-Key'] || '';\nconst expected = $vars.AUTOMATION_API_KEY || '';\nif (key !== expected) {\n  throw new Error('unauthorized');\n}\nreturn [{ json: $json }];"
+      },
+      "id": "17428015-1622-4ed7-a817-19a16c60eec3",
+      "name": "Auth Guard",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        160,
+        0
+      ],
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://179f283787aa.ngrok-free.app/api/webhooks/analysis/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Automation-Key",
+              "value": "={{$vars.AUTOMATION_API_KEY}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "document_id",
+              "value": "={{$json.document.id}}"
+            },
+            {
+              "name": "company_id",
+              "value": "={{$json.document.company_id}}"
+            },
+            {
+              "name": "summary",
+              "value": "={{$json.analysis.summary}}"
+            },
+            {
+              "name": "labels",
+              "value": "={{$json.analysis.labels}}"
+            },
+            {
+              "name": "entities",
+              "value": "={{$json.analysis.entities}}"
+            },
+            {
+              "name": "risk_score",
+              "value": "={{$json.analysis.risk_score}}"
+            },
+            {
+              "name": "status",
+              "value": "={{$json.analysis.status}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "02588563-2f51-482e-992f-99e2f06e6dad",
+      "name": "Callback Backend",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        608,
+        0
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook (analysis-in)": {
+      "main": [
+        [
+          {
+            "node": "Auth Guard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auth Guard": {
+      "main": [
+        [
+          {
+            "node": "Analyze (mock)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze (mock)": {
+      "main": [
+        [
+          {
+            "node": "Callback Backend",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "4cb02955-583f-46ef-a6f0-7cf8dc1a0526",
+  "meta": {
+    "instanceId": "447a1b4f2b681acb3ff334c2caca9d6f9c49942a9a4e7a5aaf2e8daddd94913a"
+  },
+  "id": "1I5MiMMXebbrETQ8",
+  "tags": []
+}

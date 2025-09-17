@@ -1,0 +1,21 @@
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>Análisis</mat-card-title>
+    <mat-card-subtitle>Resumen automático</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content>
+    <mat-progress-spinner *ngIf="loading" diameter="18" mode="indeterminate"></mat-progress-spinner>
+    <ng-container *ngIf="!loading">
+      <div *ngIf="analysis; else noAnalysis">
+        <p>{{ analysis?.summary }}</p>
+        <p><strong>Riesgo:</strong> {{ analysis?.risk_score }}</p>
+        <p><strong>Etiquetas:</strong> <span *ngFor="let l of analysis?.labels; let last = last">{{ l }}<span *ngIf="!last">, </span></span></p>
+      </div>
+      <ng-template #noAnalysis>
+        <p class="text-muted">Sin análisis disponible aún.</p>
+      </ng-template>
+    </ng-container>
+  </mat-card-content>
+</mat-card>
+
+

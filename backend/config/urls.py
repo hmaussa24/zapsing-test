@@ -23,6 +23,7 @@ urlpatterns = [
     path('api/', include('modules.company.api.urls')),
     path('api/', include('modules.document.api.urls')),
     path('api/', include('modules.signer.api.urls')),
+    path('api/', include('modules.analysis.api.urls')),
     # OpenAPI schema y UIs
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),

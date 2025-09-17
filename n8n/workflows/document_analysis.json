@@ -1,0 +1,125 @@
+{
+  "name": "Document Analysis",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "analysis-in",
+        "responseMode": "onReceived",
+        "options": {
+          "responseCode": 200,
+          "responseData": {
+            "response": "json",
+            "responseBody": {
+              "received": true
+            }
+          }
+        }
+      },
+      "id": "Webhook_AnalysisIn",
+      "name": "Webhook (analysis-in)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        260,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Input esperado: { event: 'document_created', document: { id, company_id, name, pdf_url } }\n// MVP: generar un análisis mock (sin proveedores externos)\nconst doc = $json.document || {};\nconst summary = `Resumen generado automáticamente para \"${doc.name || 'Documento'}\". Este es un texto de ejemplo.`;\nconst labels = ['contrato','legal'];\nconst entities = [\n  { type: 'company', value: 'Acme S.A.' },\n  { type: 'date', value: new Date().toISOString().slice(0,10) }\n];\nconst risk_score = 0.12;\nreturn [{\n  event: $json.event || 'document_created',\n  document: doc,\n  analysis: { summary, labels, entities, risk_score, status: 'done' }\n}];"
+      },
+      "id": "Function_AnalyzeMock",
+      "name": "Analyze (mock)",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        560,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "const headers = $json.headers || {};\nconst key = headers['x-automation-key'] || headers['X-Automation-Key'] || '';\nconst expected = $env.AUTOMATION_API_KEY || '';\nif (key !== expected) {\n  throw new Error('unauthorized');\n}\nreturn [{ json: $json }];"
+      },
+      "id": "Function_AuthGuard",
+      "name": "Auth Guard",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        410,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://179f283787aa.ngrok-free.app/api/webhooks/analysis/",
+        "httpMethod": "POST",
+        "options": {},
+        "sendBody": true,
+        "jsonParameters": true,
+        "authentication": "none",
+        "options.keepAlive": false,
+        "headerParametersUi": {
+          "parameter": [
+            {
+              "name": "X-Automation-Key",
+              "value": "={{$env.AUTOMATION_API_KEY}}"
+            }
+          ]
+        },
+        "bodyParametersJson": "={\n  \"document_id\": {{$json.document.id}},\n  \"company_id\": {{$json.document.company_id}},\n  \"summary\": \"{{$json.analysis.summary}}\",\n  \"labels\": {{$json.analysis.labels}},\n  \"entities\": {{$json.analysis.entities}},\n  \"risk_score\": {{$json.analysis.risk_score}},\n  \"status\": \"{{$json.analysis.status}}\"\n}"
+      },
+      "id": "HTTPRequest_Callback",
+      "name": "Callback Backend",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        860,
+        280
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook (analysis-in)": {
+      "main": [
+        [
+          {
+            "node": "Auth Guard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auth Guard": {
+      "main": [
+        [
+          {
+            "node": "Analyze (mock)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze (mock)": {
+      "main": [
+        [
+          {
+            "node": "Callback Backend",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}
+
+

@@ -26,6 +26,15 @@ export interface Page<T> {
   results: T[];
 }
 
+export interface DocumentAnalysisDto {
+  document_id: number;
+  summary: string;
+  labels: string[];
+  entities: Array<{ type: string; value: string }>;
+  risk_score: number;
+  status?: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class DocumentApiService {
   private readonly http = inject(HttpClient);
@@ -58,6 +67,10 @@ export class DocumentApiService {
 
   sendToSign(id: number): Observable<DocumentDto> {
     return this.http.post<DocumentDto>(`${this.base}${id}/send_to_sign/`, {});
+  }
+
+  getAnalysis(id: number): Observable<DocumentAnalysisDto> {
+    return this.http.get<DocumentAnalysisDto>(`${this.base}${id}/analysis/`);
   }
 }
 

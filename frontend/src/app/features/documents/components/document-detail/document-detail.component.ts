@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { DocumentApiService, DocumentDto } from '../../../../shared/services/document-api.service';
+import { DocumentApiService, DocumentDto, DocumentAnalysisDto } from '../../../../shared/services/document-api.service';
 import { SignerApiService, SignerDto } from '../../../../shared/services/signer-api.service';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -10,6 +10,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { AnalysisCardComponent } from '../analysis-card/analysis-card.component';
 
 @Component({
   standalone: true,
@@ -24,6 +25,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     MatIconModule,
     MatSnackBarModule,
     MatProgressSpinnerModule,
+    AnalysisCardComponent,
   ],
   templateUrl: './document-detail.component.html',
   styleUrls: ['./document-detail.component.scss']
@@ -41,6 +43,8 @@ export class DocumentDetailComponent implements OnInit {
   signers = signal<SignerDto[]>([]);
   loadingDoc = signal<boolean>(false);
   loadingSigners = signal<boolean>(false);
+  analysis = signal<DocumentAnalysisDto | null>(null);
+  loadingAnalysis = signal<boolean>(false);
 
   ngOnInit(): void {
     this.id.set(Number(this.route.snapshot.paramMap.get('id')));
@@ -51,6 +55,7 @@ export class DocumentDetailComponent implements OnInit {
       error: () => this.loadingDoc.set(false)
     });
     this.loadSigners();
+    this.loadAnalysis();
   }
 
   private loadSigners(): void {
@@ -59,6 +64,15 @@ export class DocumentDetailComponent implements OnInit {
       next: items => this.signers.set(items),
       complete: () => this.loadingSigners.set(false),
       error: () => this.loadingSigners.set(false)
+    });
+  }
+
+  private loadAnalysis(): void {
+    this.loadingAnalysis.set(true);
+    this.api.getAnalysis(this.id()).subscribe({
+      next: a => this.analysis.set(a),
+      complete: () => this.loadingAnalysis.set(false),
+      error: () => this.loadingAnalysis.set(false)
     });
   }
 

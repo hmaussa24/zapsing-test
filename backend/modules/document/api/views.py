@@ -20,6 +20,7 @@ from modules.document.infrastructure.repositories.document_repository_django imp
 from modules.company.infrastructure.repositories.company_repository_django import DjangoCompanyRepository
 from modules.document.infrastructure.adapters.zapsign_client_http import HttpZapSignClient
 from .serializers import DocumentCreateSerializer, DocumentSerializer, DocumentUpdateSerializer
+from modules.analysis.infrastructure.repositories.analysis_repository_django import DjangoAnalysisRepository
 
 
 class DocumentViewSet(mixins.ListModelMixin,
@@ -98,4 +99,19 @@ class DocumentViewSet(mixins.ListModelMixin,
             return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
         return Response(DocumentSerializer(result).data)
 
+    @action(detail=True, methods=['get'], url_path='analysis')
+    @extend_schema(tags=["Document"], responses={200: None, 404: None})
+    def analysis(self, request, pk=None, *args, **kwargs):
+        repo = DjangoAnalysisRepository()
+        dto = repo.get_by_document_id(int(pk))
+        if not dto:
+            return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
+        return Response({
+            'document_id': dto.document_id,
+            'summary': dto.summary,
+            'labels': dto.labels,
+            'entities': dto.entities,
+            'risk_score': dto.risk_score,
+            'status': dto.status,
+        })
 

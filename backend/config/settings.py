@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'modules.company.infrastructure.django_app',
     'modules.document.infrastructure.django_app',
     'modules.signer.infrastructure.django_app',
+    'modules.analysis.infrastructure.django_app',
 ]
 
 MIDDLEWARE = [
@@ -108,6 +109,10 @@ ZAPSIGN_API_BASE = env('ZAPSIGN_API_BASE', default='')
 ZAPSIGN_AUTH_SCHEME = env('ZAPSIGN_AUTH_SCHEME', default='Bearer')
 ZAPSIGN_DEFAULT_SIGNER_NAME = env('ZAPSIGN_DEFAULT_SIGNER_NAME', default='Default Signer')
 ZAPSIGN_DEFAULT_SIGNER_EMAIL = env('ZAPSIGN_DEFAULT_SIGNER_EMAIL', default='dev+signer@example.com')
+
+# Automation / n8n
+AUTOMATION_API_KEY = env('AUTOMATION_API_KEY', default='')
+N8N_WEBHOOK_URL = env('N8N_WEBHOOK_URL', default='')
 
 
 # Password validation
