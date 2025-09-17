@@ -9,8 +9,8 @@
     </tr>
   </thead>
   <tbody>
-    <tr *ngFor="let d of documents">
-      <td class="cell-name" title="{{ d.name }}">{{ d.name }}</td>
+    <tr *ngFor="let d of documents" [routerLink]="['/documents', d.id]" style="cursor:pointer">
+      <td class="cell-name" title="{{ d.name }}"><a [routerLink]="['/documents', d.id]">{{ d.name }}</a></td>
       <td>
         <span class="chip"
           [ngClass]="{

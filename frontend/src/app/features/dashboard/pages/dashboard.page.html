@@ -2,11 +2,10 @@
   <header>
     <h2 class="text-xl font-semibold">Dashboard</h2>
     <p class="text-slate-500 text-sm">Documentos de la compañía #1</p>
+    <div class="actions"><a routerLink="/documents/new">Nuevo documento</a></div>
   </header>
 
-  <div class="bg-white border rounded-lg p-4">
-    <app-create-document-form [companyId]="1" (documentCreated)="onCreated($event)"></app-create-document-form>
-  </div>
+  
 
   <div class="bg-white border rounded-lg p-4">
     <app-documents-table [loading]="loading()" [documents]="documents()"></app-documents-table>

@@ -1,0 +1,24 @@
+<section class="container">
+  <h2>Documento #{{ doc()?.id }}</h2>
+  <p><strong>Nombre:</strong> {{ doc()?.name }}</p>
+  <p><strong>Estado:</strong> {{ doc()?.status || '—' }}</p>
+  <div class="actions">
+    <button (click)="send()" [disabled]="sending()">Enviar a firmar</button>
+  </div>
+  <hr>
+  <h3>Signers</h3>
+  <form (submit)="add($event)">
+    <input name="name" placeholder="Nombre" required />
+    <input name="email" type="email" placeholder="Email" required />
+    <button type="submit">Agregar</button>
+    <span *ngIf="error()" class="error">{{ error() }}</span>
+  </form>
+  <ul>
+    <li *ngFor="let s of signers()">
+      {{ s.name }} - {{ s.email }}
+      <button (click)="remove(s.id)">Eliminar</button>
+    </li>
+  </ul>
+</section>
+
+

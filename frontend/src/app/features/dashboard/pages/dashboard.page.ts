@@ -1,7 +1,8 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { DocumentApiService, DocumentDto, Page } from '../../../shared/services/document-api.service';
+import { SignerApiService, SignerDto } from '../../../shared/services/signer-api.service';
 import { DocumentsTableComponent } from '../components/documents-table/documents-table.component';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { CreateDocumentFormComponent } from '../components/create-document-form/create-document-form.component';
@@ -15,12 +16,22 @@ import { CreateDocumentFormComponent } from '../components/create-document-form/
 })
 export class DashboardPage implements OnInit {
   private readonly api = inject(DocumentApiService);
+  private readonly router = inject(Router);
+  private readonly signerApi = inject(SignerApiService);
   loading = signal<boolean>(false);
   total = signal<number>(0);
   documents = signal<DocumentDto[]>([]);
   page = signal<number>(1);
   pageSize = signal<number>(5);
   pageSizeOptions = [5, 10, 20, 50];
+
+  // Wizard inline
+  showWizard = signal<boolean>(false);
+  createdDoc = signal<DocumentDto | null>(null);
+  signers = signal<SignerDto[]>([]);
+  signersLoading = signal<boolean>(false);
+  sending = signal<boolean>(false);
+  toast = signal<string | null>(null);
 
   ngOnInit(): void {
     this.load();
@@ -65,9 +76,86 @@ export class DashboardPage implements OnInit {
   }
 
   onCreated(doc: DocumentDto): void {
-    // Mantener orden por created_at desc: recargar primera página
-    this.page.set(1);
-    this.load();
+    this.createdDoc.set(doc);
+    this.showWizard.set(true);
+    this.toast.set('Documento creado. Ahora agrega 1–2 signers.');
+    setTimeout(() => this.toast.set(null), 3000);
+    this.loadSigners();
+  }
+
+  startWizard(): void {
+    this.showWizard.set(true);
+    this.createdDoc.set(null);
+    this.signers.set([]);
+  }
+
+  exitWizard(): void {
+    this.showWizard.set(false);
+    this.createdDoc.set(null);
+    this.signers.set([]);
+  }
+
+  private loadSigners(): void {
+    const doc = this.createdDoc();
+    if (!doc) return;
+    this.signersLoading.set(true);
+    this.signerApi.listByDocument(doc.id).subscribe({
+      next: (items) => this.signers.set(items),
+      complete: () => this.signersLoading.set(false),
+      error: () => this.signersLoading.set(false)
+    });
+  }
+
+  addSigner(name: string, email: string): void {
+    const doc = this.createdDoc();
+    if (!doc) return;
+    this.signersLoading.set(true);
+    this.signerApi.create(doc.id, name, email).subscribe({
+      next: () => {
+        this.toast.set('Signer agregado');
+        setTimeout(() => this.toast.set(null), 2000);
+        this.loadSigners();
+      },
+      complete: () => this.signersLoading.set(false),
+      error: () => {
+        this.signersLoading.set(false);
+        this.toast.set('Error al agregar signer');
+        setTimeout(() => this.toast.set(null), 2500);
+      }
+    });
+  }
+
+  removeSigner(id: number): void {
+    this.signersLoading.set(true);
+    this.signerApi.delete(id).subscribe({
+      next: () => this.loadSigners(),
+      complete: () => this.signersLoading.set(false),
+      error: () => this.signersLoading.set(false)
+    });
+  }
+
+  canSend(): boolean {
+    const c = this.signers().length;
+    return c >= 1 && c <= 2 && !this.sending();
+  }
+
+  sendCurrent(): void {
+    const doc = this.createdDoc();
+    if (!doc || !this.canSend()) return;
+    this.sending.set(true);
+    this.api.sendToSign(doc.id).subscribe({
+      next: (d) => {
+        this.createdDoc.set(d);
+        this.toast.set('Documento enviado a firmar');
+        setTimeout(() => this.toast.set(null), 3000);
+      },
+      complete: () => this.sending.set(false),
+      error: () => {
+        this.sending.set(false);
+        this.toast.set('Error al enviar a firmar');
+        setTimeout(() => this.toast.set(null), 3000);
+      }
+    });
   }
 }
 

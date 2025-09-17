@@ -55,6 +55,10 @@ export class DocumentApiService {
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.base}${id}/`);
   }
+
+  sendToSign(id: number): Observable<DocumentDto> {
+    return this.http.post<DocumentDto>(`${this.base}${id}/send_to_sign/`, {});
+  }
 }
 
 
