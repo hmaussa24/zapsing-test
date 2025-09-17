@@ -19,7 +19,21 @@ services:
       retries: 5
     restart: unless-stopped
 
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: zapsign-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: zapsign
+      RABBITMQ_DEFAULT_PASS: zapsign
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    restart: unless-stopped
+
 volumes:
   postgres_data: {}
+  rabbitmq_data: {}
 
 

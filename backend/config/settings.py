@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'modules.document.infrastructure.django_app',
     'modules.signer.infrastructure.django_app',
     'modules.analysis.infrastructure.django_app',
+    'modules.automation.infrastructure.django_app',
 ]
 
 MIDDLEWARE = [
@@ -113,6 +114,11 @@ ZAPSIGN_DEFAULT_SIGNER_EMAIL = env('ZAPSIGN_DEFAULT_SIGNER_EMAIL', default='dev+
 # Automation / n8n
 AUTOMATION_API_KEY = env('AUTOMATION_API_KEY', default='')
 N8N_WEBHOOK_URL = env('N8N_WEBHOOK_URL', default='')
+
+# Queue (RabbitMQ)
+RABBITMQ_URL = env('RABBITMQ_URL', default='amqp://zapsign:zapsign@localhost:5672//')
+AUTOMATION_QUEUE = env('AUTOMATION_QUEUE', default='document_created')
+START_AUTOMATION_WORKER = env.bool('START_AUTOMATION_WORKER', default=False)
 
 
 # Password validation

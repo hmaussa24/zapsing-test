@@ -11,6 +11,7 @@ from modules.document.infrastructure.repositories.document_repository_django imp
 from modules.company.infrastructure.repositories.company_repository_django import DjangoCompanyRepository
 from modules.document.infrastructure.adapters.zapsign_client_http import HttpZapSignClient
 from modules.analysis.infrastructure.adapters.automation_notifier_http import HttpAutomationNotifier
+from modules.automation.infrastructure.adapters.rabbitmq_publisher import RabbitMqEventPublisher
 
 
 def get_document_command_repo() -> DocumentCommandRepository:
@@ -27,6 +28,7 @@ def make_create_document_use_case() -> CreateDocumentUseCase:
         company_repository=DjangoCompanyRepository(),
         zap_sign_client=HttpZapSignClient(),
         automation_notifier=HttpAutomationNotifier(),
+        event_publisher=RabbitMqEventPublisher(),
     )
 
 
