@@ -2,7 +2,6 @@ from rest_framework import serializers
 
 
 class DocumentCreateSerializer(serializers.Serializer):
-    company_id = serializers.IntegerField()
     name = serializers.CharField(max_length=255)
     pdf_url = serializers.URLField(max_length=4096)
 

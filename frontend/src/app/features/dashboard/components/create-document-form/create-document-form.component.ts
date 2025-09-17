@@ -14,7 +14,7 @@ export class CreateDocumentFormComponent implements OnDestroy {
   private readonly fb = inject(FormBuilder);
   private readonly api = inject(DocumentApiService);
 
-  @Input({ required: true }) companyId!: number;
+  // companyId ya no es necesario; backend usa JWT
   @Output() documentCreated = new EventEmitter<DocumentDto>();
 
   loading = signal<boolean>(false);
@@ -43,7 +43,7 @@ export class CreateDocumentFormComponent implements OnDestroy {
     const { name, pdf_url } = this.form.getRawValue();
     const normalizedName = (name ?? '').trim().replace(/\s+/g, ' ');
     const normalizedPdfUrl = (pdf_url ?? '').trim();
-    this.api.create({ company_id: this.companyId, name: normalizedName, pdf_url: normalizedPdfUrl }).subscribe({
+    this.api.create({ name: normalizedName, pdf_url: normalizedPdfUrl }).subscribe({
       next: (doc) => {
         this.success.set('Documento creado correctamente');
         this.error.set(null);

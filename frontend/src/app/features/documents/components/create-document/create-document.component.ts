@@ -30,7 +30,7 @@ export class CreateDocumentComponent {
     if (this.form.invalid || this.creating()) return;
     this.creating.set(true);
     const raw = this.form.getRawValue();
-    this.docs.create({ company_id: 1, name: (raw.name ?? '').trim(), pdf_url: (raw.pdf_url ?? '').trim() }).subscribe({
+    this.docs.create({ name: (raw.name ?? '').trim(), pdf_url: (raw.pdf_url ?? '').trim() }).subscribe({
       next: (d) => { this.form.disable(); this.createdFlag.set(true); this.created.emit(d); },
       complete: () => this.creating.set(false),
       error: () => this.creating.set(false)

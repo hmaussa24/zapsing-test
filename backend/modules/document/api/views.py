@@ -16,6 +16,7 @@ from modules.company.infrastructure.repositories.company_repository_django impor
 from modules.signer.infrastructure.repositories.signer_repository_django import DjangoSignerRepository
 from modules.document.infrastructure.adapters.zapsign_client_http import HttpZapSignClient
 from modules.document.application.dtos import CreateDocumentDTO
+from modules.company.api.token import company_id_from_request
 from modules.document.infrastructure.repositories.document_repository_django import DjangoDocumentRepository
 from modules.company.infrastructure.repositories.company_repository_django import DjangoCompanyRepository
 from modules.document.infrastructure.adapters.zapsign_client_http import HttpZapSignClient
@@ -44,15 +45,20 @@ class DocumentViewSet(mixins.ListModelMixin,
         serializer = DocumentCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
-        result = make_create_document_use_case().execute(CreateDocumentDTO(**data))
+        cid = company_id_from_request(request)
+        if not cid:
+            return Response({"detail": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
+        result = make_create_document_use_case().execute(CreateDocumentDTO(company_id=cid, name=data['name'], pdf_url=data['pdf_url']))
         return Response(DocumentSerializer(result).data, status=status.HTTP_201_CREATED)
 
     @extend_schema(tags=["Document"], responses=DocumentSerializer(many=True))
     def list(self, request, *args, **kwargs):
-        company_id = request.query_params.get('company_id')
+        company_id = company_id_from_request(request)
+        if not company_id:
+            return Response({"detail": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
         page = int(request.query_params.get('page', 1))
         page_size = int(request.query_params.get('page_size', 10))
-        page_dto = make_list_documents_use_case().execute(company_id=int(company_id) if company_id else None, page=page, page_size=page_size)
+        page_dto = make_list_documents_use_case().execute(company_id=company_id, page=page, page_size=page_size)
         # Adaptador HTTP: devuelve estructura paginada
         return Response({
             'count': page_dto.count,
@@ -66,12 +72,19 @@ class DocumentViewSet(mixins.ListModelMixin,
         item = make_get_document_use_case().execute(int(pk))
         if not item:
             return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
+        cid = company_id_from_request(request)
+        if not cid or item.company_id != cid:
+            return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
         return Response(DocumentSerializer(item).data)
 
     @extend_schema(tags=["Document"], request=DocumentUpdateSerializer, responses=DocumentSerializer)
     def partial_update(self, request, pk=None, *args, **kwargs):
         serializer = DocumentUpdateSerializer(data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
+        current = make_get_document_use_case().execute(int(pk))
+        cid = company_id_from_request(request)
+        if not current or not cid or current.company_id != cid:
+            return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
         updated = make_update_document_partial_use_case().execute(int(pk), **serializer.validated_data)
         if not updated:
             return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
@@ -79,6 +92,10 @@ class DocumentViewSet(mixins.ListModelMixin,
 
     @extend_schema(tags=["Document"], responses={204: None, 404: None})
     def destroy(self, request, pk=None, *args, **kwargs):
+        current = make_get_document_use_case().execute(int(pk))
+        cid = company_id_from_request(request)
+        if not current or not cid or current.company_id != cid:
+            return Response(status=status.HTTP_404_NOT_FOUND)
         ok = make_delete_document_use_case().execute(int(pk))
         return Response(status=status.HTTP_204_NO_CONTENT if ok else status.HTTP_404_NOT_FOUND)
 

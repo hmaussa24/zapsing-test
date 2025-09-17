@@ -16,9 +16,9 @@ export interface DocumentDto {
 }
 
 export interface CreateDocumentDto {
-  company_id: number;
   name: string;
   pdf_url: string;
+  company_id?: number; // backend ignora si hay JWT
 }
 
 export interface Page<T> {
@@ -42,9 +42,8 @@ export class DocumentApiService {
   private readonly http = inject(HttpClient);
   private readonly base = '/api/documents/';
 
-  list(params?: { company_id?: number; page?: number; page_size?: number }): Observable<Page<DocumentDto>> {
+  list(params?: { page?: number; page_size?: number }): Observable<Page<DocumentDto>> {
     const q: string[] = [];
-    if (params?.company_id != null) q.push(`company_id=${params.company_id}`);
     if (params?.page != null) q.push(`page=${params.page}`);
     if (params?.page_size != null) q.push(`page_size=${params.page_size}`);
     const query = q.length ? `?${q.join('&')}` : '';

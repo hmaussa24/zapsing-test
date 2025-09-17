@@ -46,4 +46,57 @@ cp frontend/.env.example frontend/.env
 ```
 - Asegúrate de que `DATABASE_URL` apunte al puerto `55432` si usas Docker Compose.
 
+### Backend (Django + DRF)
+- Requisitos: Python 3.12+, virtualenv
+- Instalar dependencias:
+```bash
+python3 -m venv backend/.venv
+backend/.venv/bin/pip install -U pip
+backend/.venv/bin/pip install -r backend/requirements.txt
+```
+- Variables de entorno:
+  - Copia `backend/.env.example` a `backend/.env` y ajusta:
+    - `DATABASE_URL=postgres://zapsign:password@localhost:55432/zapsign`
+    - `AUTOMATION_API_KEY=...` (mismo secreto configurado en n8n)
+    - `N8N_WEBHOOK_URL=https://<tu-n8n-cloud>/webhook/analysis-in`
+    - `RABBITMQ_URL=amqp://zapsign:zapsign@localhost:5672/%2F` (o tu vhost)
+    - `AUTOMATION_QUEUE=document_created`
+    - `START_AUTOMATION_WORKER=true` (opcional: arranca el worker con el backend)
+- Migraciones y arranque:
+```bash
+backend/.venv/bin/python backend/manage.py migrate
+backend/.venv/bin/python backend/manage.py runserver
+```
+- Worker (opciones):
+  - Autostart: `START_AUTOMATION_WORKER=true` y `runserver`
+  - Manual:
+  ```bash
+  backend/.venv/bin/python backend/manage.py run_automation_worker
+  ```
+
+### Servicios con Docker Compose
+- Postgres y RabbitMQ:
+```bash
+docker compose up -d db rabbitmq
+```
+- RabbitMQ Management UI: http://localhost:15672 (user/pass por defecto `zapsign/zapsign`).
+
+### Frontend (Angular 17)
+- Requisitos: Node.js 18+ y pnpm/npm
+- Variables: copia `frontend/.env.example` a `frontend/.env` (API base `http://localhost:8000`).
+- Instalar y arrancar:
+```bash
+cd frontend
+npm install
+npm start
+```
+- Material Icons (si no se ven íconos): agrega en `frontend/src/index.html` dentro de `<head>`:
+```html
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+```
+
+### n8n (Cloud)
+- Configura un webhook de entrada (production URL) y variable `AUTOMATION_API_KEY` en n8n.
+- El backend envía `X-Automation-Key` y recibe el callback en `/api/webhooks/analysis/`.
+
 

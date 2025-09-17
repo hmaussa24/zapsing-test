@@ -49,7 +49,7 @@ export class DashboardPage implements OnInit {
 
   load(): void {
     this.loading.set(true);
-    this.api.list({ company_id: 1, page: this.page(), page_size: this.pageSize() }).subscribe({
+    this.api.list({ page: this.page(), page_size: this.pageSize() }).subscribe({
       next: (resp: Page<DocumentDto>) => {
         this.total.set(resp.count);
         this.documents.set(resp.results);
