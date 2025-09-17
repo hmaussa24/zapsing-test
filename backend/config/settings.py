@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'modules.company.infrastructure.django_app',
     'modules.document.infrastructure.django_app',
+    'modules.signer.infrastructure.django_app',
 ]
 
 MIDDLEWARE = [
