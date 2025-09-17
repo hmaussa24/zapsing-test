@@ -16,6 +16,13 @@ class DjangoDocumentRepository(DocumentCommandRepository, DocumentQueryRepositor
             return None
         return orm_to_dto(obj)
 
+    def get_by_open_id(self, open_id: str) -> DocumentDTO | None:
+        try:
+            obj = Document.objects.get(open_id=open_id)
+        except Document.DoesNotExist:  # type: ignore[attr-defined]
+            return None
+        return orm_to_dto(obj)
+
     def list_all(self) -> list[DocumentDTO]:
         return [orm_to_dto(o) for o in Document.objects.all().order_by('-created_at')]
 
