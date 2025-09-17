@@ -41,7 +41,16 @@ class DocumentViewSet(mixins.ListModelMixin,
 
     @extend_schema(tags=["Document"], responses=DocumentSerializer(many=True))
     def list(self, request, *args, **kwargs):
-        items = DjangoDocumentRepository().list_all()
+        company_id = request.query_params.get('company_id')
+        repo = DjangoDocumentRepository()
+        if company_id:
+            items = repo.list_by_company(int(company_id))
+        else:
+            items = repo.list_all()
+        page = self.paginate_queryset(items)
+        if page is not None:
+            serializer_data = [DocumentSerializer(i).data for i in page]
+            return self.get_paginated_response(serializer_data)
         data = [DocumentSerializer(i).data for i in items]
         return Response(data)
 

@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import Optional
+from datetime import datetime
 
 
 @dataclass
@@ -11,6 +12,7 @@ class DocumentDTO:
     status: str
     open_id: Optional[str] = None
     token: Optional[str] = None
+    created_at: Optional[datetime] = None
 
 
 @dataclass

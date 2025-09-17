@@ -1,0 +1,22 @@
+<form [formGroup]="form" (ngSubmit)="submit()" class="create-doc-form">
+  <div class="field">
+    <label for="name">Nombre</label>
+    <input id="name" type="text" formControlName="name" [disabled]="loading()" />
+    <small class="error" *ngIf="form.controls.name.touched && form.controls.name.hasError('required')">Requerido</small>
+    <small class="error" *ngIf="form.controls.name.touched && form.controls.name.hasError('maxlength')">Máximo 200</small>
+  </div>
+  <div class="field">
+    <label for="pdf_url">URL del PDF</label>
+    <input id="pdf_url" type="url" formControlName="pdf_url" [disabled]="loading()" />
+    <small class="error" *ngIf="form.controls.pdf_url.touched && form.controls.pdf_url.hasError('required')">Requerido</small>
+    <small class="error" *ngIf="form.controls.pdf_url.touched && form.controls.pdf_url.hasError('maxlength')">Máximo 4096</small>
+    <small class="error" *ngIf="form.controls.pdf_url.touched && form.controls.pdf_url.hasError('endsWithPdf')">Debe terminar en .pdf (se permite querystring)</small>
+  </div>
+  <div class="actions">
+    <button type="submit" [disabled]="loading() || form.invalid">Crear</button>
+    <span class="success" *ngIf="success()">{{ success() }}</span>
+    <span class="error" *ngIf="error()">{{ error() }}</span>
+  </div>
+</form>
+
+

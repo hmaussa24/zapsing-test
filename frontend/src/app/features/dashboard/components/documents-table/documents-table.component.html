@@ -1,0 +1,32 @@
+<div *ngIf="loading" class="skeleton">Cargando...</div>
+
+<table *ngIf="!loading && documents.length" class="table">
+  <thead>
+    <tr>
+      <th>Nombre</th>
+      <th>Estado</th>
+      <th>Creado</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let d of documents">
+      <td class="cell-name" title="{{ d.name }}">{{ d.name }}</td>
+      <td>
+        <span class="chip"
+          [ngClass]="{
+            'chip--ok': d.status === 'created' || d.status === 'ready',
+            'chip--pending': d.status === 'pending',
+            'chip--done': d.status === 'signed' || d.status === 'completed',
+            'chip--error': d.status === 'error' || d.status === 'failed'
+          }"
+        >{{ d.status || '—' }}</span>
+      </td>
+      <td>{{ d.created_at | date:'medium' }}</td>
+    </tr>
+  </tbody>
+  
+</table>
+
+<div *ngIf="!loading && !documents.length" class="empty">Sin documentos</div>
+
+

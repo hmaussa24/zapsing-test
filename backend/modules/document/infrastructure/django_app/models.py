@@ -4,7 +4,7 @@ from django.db import models
 class Document(models.Model):
     company = models.ForeignKey('companies.Company', on_delete=models.PROTECT, related_name='documents', db_index=True)
     name = models.CharField(max_length=255)
-    pdf_url = models.URLField()
+    pdf_url = models.URLField(max_length=4096)
     status = models.CharField(max_length=50, default='created')
     open_id = models.CharField(max_length=255, null=True, blank=True)
     token = models.CharField(max_length=255, null=True, blank=True)

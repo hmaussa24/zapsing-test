@@ -60,6 +60,49 @@ Estandarizar cómo trabajamos en este repositorio utilizando Cursor, con foco en
 - Backend: DRF ViewSets y Serializers como adaptadores; casos de uso en capa aplicación.
 - Frontend: Angular con componentes reactivos, servicios, estado con RxJS.
 
+### Estructura recomendada del Frontend (Angular)
+```
+src/
+ ├── app/
+ │    ├── core/                  # Servicios globales, guards, interceptors, layouts, config
+ │    │    ├── guards/
+ │    │    ├── interceptors/
+ │    │    ├── services/
+ │    │    ├── layouts/
+ │    │    └── core.module.ts    # O, si usas standalone, un provider central
+ │    │
+ │    ├── shared/                # Componentes, directivas y pipes reutilizables
+ │    │    ├── components/
+ │    │    ├── directives/
+ │    │    ├── pipes/
+ │    │    └── shared.module.ts
+ │    │
+ │    ├── features/              # Cada feature (dominio) en un módulo/carpeta separado
+ │    │    ├── auth/             # Ejemplo: autenticación
+ │    │    │    ├── components/
+ │    │    │    ├── pages/
+ │    │    │    ├── services/
+ │    │    │    ├── models/
+ │    │    │    └── auth.module.ts
+ │    │    │
+ │    │    ├── dashboard/        # Ejemplo: dashboard
+ │    │    │    ├── components/
+ │    │    │    ├── pages/
+ │    │    │    ├── services/
+ │    │    │    └── dashboard.module.ts
+ │    │    │
+ │    │    └── ...               # Más features
+ │    │
+ │    ├── app.routes.ts          # Configuración de rutas principales
+ │    ├── app.config.ts          # Providers globales (con provideX)
+ │    └── app.component.ts
+ │
+ ├── assets/                     # Imágenes, fuentes, estilos globales
+ ├── environments/               # Archivos de configuración por entorno
+ ├── main.ts                     # Punto de entrada
+ └── styles.scss                 # Estilos globales
+```
+
 ### Cómo empezar
 1. Lee `INSTRUCTION.MD` y `PLAN_EJECUCION.md`.
 2. Abre una rama `feat/<tu-feature>`.

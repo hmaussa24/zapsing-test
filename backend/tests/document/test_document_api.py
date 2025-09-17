@@ -45,9 +45,11 @@ def test_list_documents_api(client):
 
     resp = client.get("/api/documents/")
     assert resp.status_code == 200
-    items = resp.json()
-    assert isinstance(items, list)
-    assert len(items) >= 2
+    body = resp.json()
+    assert isinstance(body, dict)
+    assert "results" in body
+    assert isinstance(body["results"], list)
+    assert len(body["results"]) >= 2
 
 
 @pytest.mark.django_db

@@ -1,0 +1,29 @@
+.create-doc-form {
+  display: grid;
+  gap: 12px;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+label { font-weight: 600; }
+input {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.actions { display: flex; align-items: center; gap: 12px; }
+button {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  cursor: pointer;
+}
+.success { color: #16a34a; }
+.error { color: #dc2626; }
+
+

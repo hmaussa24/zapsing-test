@@ -1,0 +1,13 @@
+.table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #e5e7eb;border-radius:.5rem;overflow:hidden}
+.table th,.table td{padding:.5rem .75rem;border-bottom:1px solid #f3f4f6;text-align:left;font-size:.9rem}
+.table thead th{background:#f8fafc;color:#475569;font-weight:600;text-transform:uppercase;font-size:.75rem}
+.table tbody tr:hover{background:#f9fafb}
+.cell-name{max-width:480px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip{display:inline-flex;align-items:center;gap:.25rem;padding:.125rem .5rem;border-radius:9999px;font-size:.75rem;font-weight:600;color:#0f172a;background:#e2e8f0}
+.chip--ok{background:#dcfce7;color:#166534}
+.chip--pending{background:#fef9c3;color:#854d0e}
+.chip--done{background:#e0f2fe;color:#075985}
+.chip--error{background:#fee2e2;color:#991b1b}
+.skeleton,.empty{color:#6b7280}
+
+

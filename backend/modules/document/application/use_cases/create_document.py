@@ -22,17 +22,17 @@ class CreateDocumentUseCase:
         if not company:
             return doc
 
-        result = self.zap_sign_client.create(api_token=company.api_token, name=dto.name, pdf_url=dto.pdf_url)
+        result = None #self.zap_sign_client.create(api_token=company.api_token, name=dto.name, pdf_url=dto.pdf_url)
 
-        if result.open_id or result.token or result.status:
-            updated = self.document_repository.update_partial(
-                doc.id,
-                open_id=result.open_id,
-                token=result.token,
-                status=result.status or doc.status,
-            )
-            if updated:
-                return updated
+        #if result.open_id or result.token or result.status:
+        #    updated = self.document_repository.update_partial(
+        #        doc.id,
+        #        open_id=result.open_id,
+        #        token=result.token,
+        #        status=result.status or doc.status,
+        #    )
+        #    if updated:
+        #        return updated
         return doc
 
 

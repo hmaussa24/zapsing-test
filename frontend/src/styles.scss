@@ -1,1 +1,52 @@
-/* You can add global styles to this file, and also import other style files */
+@import '@angular/material/prebuilt-themes/indigo-pink.css';
+/* Tipografía y estilos globales */
+@import '@angular/material/prebuilt-themes/indigo-pink.css';
+:root {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
+    Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  --text-color: #111827; /* slate-900 */
+  --text-muted: #6b7280; /* slate-500 */
+  --bg: #f9fafb;        /* slate-50 */
+  --surface: #ffffff;   /* white */
+  --border: #e5e7eb;    /* slate-200 */
+}
+
+html { font-size: 16px; }
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  color: var(--text-color);
+  background: var(--bg);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 0 0 .75rem 0;
+  line-height: 1.25;
+  font-weight: 600;
+}
+
+h1 { font-size: 2rem; }
+h2 { font-size: 1.5rem; }
+h3 { font-size: 1.25rem; }
+
+p, ul, ol { margin: 0 0 .75rem 0; }
+small, .text-muted { color: var(--text-muted); }
+
+a { color: var(--text-color); text-decoration: none; }
+a:hover, a:focus { text-decoration: underline; }
+
+/* Tablas base */
+table { width: 100%; border-collapse: collapse; background: var(--surface); }
+th, td { padding: .5rem .75rem; border-bottom: 1px solid var(--border); text-align: left; }
+thead th { background: #f8fafc; color: #475569; font-weight: 600; text-transform: uppercase; font-size: .75rem; }
+tbody tr:hover { background: #f9fafb; }
+
+/* Contenedores base */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: .5rem; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 1rem; }

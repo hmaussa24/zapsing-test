@@ -91,6 +91,8 @@ DATABASES = {
 # DRF / OpenAPI
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_PAGINATION_CLASS': 'config.pagination.DefaultPageNumberPagination',
+    'PAGE_SIZE': 10,
 }
 
 SPECTACULAR_SETTINGS = {
@@ -99,6 +101,12 @@ SPECTACULAR_SETTINGS = {
     'VERSION': '1.0.0',
     'COMPONENT_SPLIT_REQUEST': True,
 }
+
+# ZapSign
+ZAPSIGN_API_BASE = env('ZAPSIGN_API_BASE', default='')
+ZAPSIGN_AUTH_SCHEME = env('ZAPSIGN_AUTH_SCHEME', default='Bearer')
+ZAPSIGN_DEFAULT_SIGNER_NAME = env('ZAPSIGN_DEFAULT_SIGNER_NAME', default='Default Signer')
+ZAPSIGN_DEFAULT_SIGNER_EMAIL = env('ZAPSIGN_DEFAULT_SIGNER_EMAIL', default='dev+signer@example.com')
 
 
 # Password validation

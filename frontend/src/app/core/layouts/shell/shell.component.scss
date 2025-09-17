@@ -1,0 +1,12 @@
+.app-shell{display:flex;flex-direction:column;height:100vh;color:#111827;background:#f9fafb}
+.app-header{display:flex;align-items:center;justify-content:space-between;height:56px;padding:0 16px;border-bottom:1px solid #e5e7eb;background:#fff}
+.brand{font-weight:600}
+.top-nav a{margin-left:12px;color:#111827;text-decoration:none}
+.top-nav a.active,.top-nav a:hover{text-decoration:underline}
+.app-body{display:flex;flex:1;min-height:0}
+.app-sidebar{width:220px;border-right:1px solid #e5e7eb;background:#fff;padding:12px}
+.app-sidebar a{display:block;padding:8px;border-radius:6px;color:#111827;text-decoration:none}
+.app-sidebar a.active,.app-sidebar a:hover{background:#f3f4f6}
+.app-content{flex:1;overflow:auto;padding:16px}
+
+

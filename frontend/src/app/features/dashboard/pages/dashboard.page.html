@@ -1,0 +1,23 @@
+<section class="dashboard-page space-y-4">
+  <header>
+    <h2 class="text-xl font-semibold">Dashboard</h2>
+    <p class="text-slate-500 text-sm">Documentos de la compañía #1</p>
+  </header>
+
+  <div class="bg-white border rounded-lg p-4">
+    <app-create-document-form [companyId]="1" (documentCreated)="onCreated($event)"></app-create-document-form>
+  </div>
+
+  <div class="bg-white border rounded-lg p-4">
+    <app-documents-table [loading]="loading()" [documents]="documents()"></app-documents-table>
+    <mat-paginator
+      [length]="total()"
+      [pageIndex]="page() - 1"
+      [pageSize]="pageSize()"
+      [pageSizeOptions]="pageSizeOptions"
+      (page)="onPageChange($event)">
+    </mat-paginator>
+  </div>
+</section>
+
+
