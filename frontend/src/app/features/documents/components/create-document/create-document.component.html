@@ -7,7 +7,7 @@
     <mat-label>URL PDF</mat-label>
     <input matInput formControlName="pdf_url" type="url" />
   </mat-form-field>
-  <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid || creating()">
+  <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid || creating() || createdFlag()">
     <span *ngIf="!creating()">Crear</span>
     <mat-progress-spinner *ngIf="creating()" diameter="18" mode="indeterminate"></mat-progress-spinner>
   </button>

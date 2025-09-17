@@ -5,6 +5,7 @@ import { Router, RouterModule } from '@angular/router';
 import { DocumentApiService, DocumentDto } from '../../../shared/services/document-api.service';
 import { SignerApiService, SignerDto } from '../../../shared/services/signer-api.service';
 import { CreateDocumentComponent } from '../../documents/components/create-document/create-document.component';
+import { SignersManagerComponent } from '../../documents/components/signers-manager/signers-manager.component';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -27,59 +28,11 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     MatIconModule,
     MatSnackBarModule,
     MatProgressSpinnerModule,
-  , CreateDocumentComponent],
-  template: `
-  <section class="container" style="display:grid; gap:16px;">
-    <mat-card>
-      <mat-card-header>
-        <mat-card-title>Nuevo documento</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <app-create-document (created)="onCreated($event)"></app-create-document>
-      </mat-card-content>
-    </mat-card>
-
-    <mat-card *ngIf="doc() as d">
-      <mat-card-header>
-        <mat-card-title>Signers ({{ signers().length }}/2)</mat-card-title>
-        <mat-card-subtitle>Agrega 1–2 antes de enviar</mat-card-subtitle>
-      </mat-card-header>
-      <mat-card-content>
-        <form (submit)="addSigner($event)" style="display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap;">
-          <mat-form-field appearance="outline">
-            <mat-label>Nombre</mat-label>
-            <input matInput name="name" required />
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Email</mat-label>
-            <input matInput name="email" type="email" required />
-          </mat-form-field>
-          <button mat-raised-button color="primary" type="submit" [disabled]="adding()">
-            <mat-icon *ngIf="!adding()">person_add</mat-icon>
-            <span *ngIf="!adding()">Agregar</span>
-            <mat-progress-spinner *ngIf="adding()" diameter="18" mode="indeterminate"></mat-progress-spinner>
-          </button>
-        </form>
-        <div style="margin-top:8px;">
-          <div *ngFor="let s of signers()" style="display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid #eee;">
-            <div>{{ s.name }} — {{ s.email }}</div>
-            <button mat-button color="warn" (click)="removeSigner(s.id)">
-              <mat-icon>delete</mat-icon>
-              Eliminar
-            </button>
-          </div>
-        </div>
-      </mat-card-content>
-      <mat-card-actions>
-        <button mat-stroked-button (click)="goBack()">Salir</button>
-        <button mat-raised-button color="accent" (click)="send()" [disabled]="!canSend()">
-          <mat-icon>send</mat-icon>
-          Enviar a firmar
-        </button>
-      </mat-card-actions>
-    </mat-card>
-  </section>
-  `
+    CreateDocumentComponent,
+    SignersManagerComponent,
+  ],
+  templateUrl: './create-document.page.html',
+  styleUrls: ['./create-document.page.scss']
 })
 export class CreateDocumentPage implements OnInit {
   private readonly fb = inject(FormBuilder);
@@ -92,6 +45,7 @@ export class CreateDocumentPage implements OnInit {
   adding = signal<boolean>(false);
   doc = signal<DocumentDto | null>(null);
   signers = signal<SignerDto[]>([]);
+  signersCount = signal<number>(0);
   toast = signal<string | null>(null);
 
   ngOnInit(): void {}
@@ -116,7 +70,7 @@ export class CreateDocumentPage implements OnInit {
     this.signersApi.delete(id).subscribe(() => this.signers.set(this.signers().filter(s => s.id !== id)));
   }
 
-  canSend(): boolean { const c = this.signers().length; return !!this.doc() && c >= 1 && c <= 2; }
+  canSend(): boolean { const c = this.signersCount(); return !!this.doc() && c >= 1 && c <= 2; }
 
   send(): void {
     const d = this.doc(); if (!d || !this.canSend()) return;

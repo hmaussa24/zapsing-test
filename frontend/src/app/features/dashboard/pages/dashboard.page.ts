@@ -6,11 +6,15 @@ import { SignerApiService, SignerDto } from '../../../shared/services/signer-api
 import { DocumentsTableComponent } from '../components/documents-table/documents-table.component';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { CreateDocumentFormComponent } from '../components/create-document-form/create-document-form.component';
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatToolbarModule } from '@angular/material/toolbar';
 
 @Component({
   selector: 'app-dashboard-page',
   standalone: true,
-  imports: [CommonModule, RouterModule, DocumentsTableComponent, MatPaginatorModule, CreateDocumentFormComponent],
+  imports: [CommonModule, RouterModule, DocumentsTableComponent, MatPaginatorModule, CreateDocumentFormComponent, MatCardModule, MatButtonModule, MatIconModule, MatToolbarModule],
   templateUrl: './dashboard.page.html',
   styleUrls: ['./dashboard.page.scss']
 })

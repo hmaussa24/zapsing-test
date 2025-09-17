@@ -1,0 +1,22 @@
+<section class="container" style="display:grid; gap:16px;">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Nuevo documento</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <app-create-document (created)="onCreated($event)"></app-create-document>
+    </mat-card-content>
+  </mat-card>
+
+  <ng-container *ngIf="doc() as d">
+    <app-signers-manager [documentId]="d.id" (signersChanged)="signersCount.set($event)"/>
+    <div style="display:flex; gap:8px; margin-top:8px;">
+      <button mat-stroked-button (click)="goBack()">Salir</button>
+      <button mat-raised-button color="accent" (click)="send()" [disabled]="!canSend()">
+        Enviar a firmar
+      </button>
+    </div>
+  </ng-container>
+</section>
+
+

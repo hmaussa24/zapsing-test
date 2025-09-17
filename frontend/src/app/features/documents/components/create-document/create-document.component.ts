@@ -19,6 +19,7 @@ export class CreateDocumentComponent {
   private readonly docs = inject(DocumentApiService);
   @Output() created = new EventEmitter<DocumentDto>();
   creating = signal<boolean>(false);
+  createdFlag = signal<boolean>(false);
 
   form = this.fb.group({
     name: ['', [Validators.required, Validators.maxLength(200)]],
@@ -30,7 +31,7 @@ export class CreateDocumentComponent {
     this.creating.set(true);
     const raw = this.form.getRawValue();
     this.docs.create({ company_id: 1, name: (raw.name ?? '').trim(), pdf_url: (raw.pdf_url ?? '').trim() }).subscribe({
-      next: (d) => this.created.emit(d),
+      next: (d) => { this.form.disable(); this.createdFlag.set(true); this.created.emit(d); },
       complete: () => this.creating.set(false),
       error: () => this.creating.set(false)
     });

@@ -1,24 +1,46 @@
-<section class="container">
-  <h2>Documento #{{ doc()?.id }}</h2>
-  <p><strong>Nombre:</strong> {{ doc()?.name }}</p>
-  <p><strong>Estado:</strong> {{ doc()?.status || '—' }}</p>
-  <div class="actions">
-    <button (click)="send()" [disabled]="sending()">Enviar a firmar</button>
-  </div>
-  <hr>
-  <h3>Signers</h3>
-  <form (submit)="add($event)">
-    <input name="name" placeholder="Nombre" required />
-    <input name="email" type="email" placeholder="Email" required />
-    <button type="submit">Agregar</button>
-    <span *ngIf="error()" class="error">{{ error() }}</span>
-  </form>
-  <ul>
-    <li *ngFor="let s of signers()">
-      {{ s.name }} - {{ s.email }}
-      <button (click)="remove(s.id)">Eliminar</button>
-    </li>
-  </ul>
+<section class="container" style="display:grid; gap:16px;">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Documento #{{ doc()?.id }}</mat-card-title>
+      <mat-card-subtitle>{{ doc()?.name }}</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <div style="display:flex; gap:12px; align-items:center;">
+        <div><strong>Estado:</strong> {{ doc()?.status || '—' }}</div>
+        <mat-progress-spinner *ngIf="sending() || loadingDoc()" diameter="18" mode="indeterminate"></mat-progress-spinner>
+      </div>
+    </mat-card-content>
+    <mat-card-actions>
+      <button mat-raised-button color="accent" (click)="send()" [disabled]="sending()">Enviar a firmar</button>
+    </mat-card-actions>
+  </mat-card>
+
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Signers</mat-card-title>
+      <mat-card-subtitle>Agrega firmantes al documento</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <form (submit)="add($event)" style="display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap;">
+        <mat-form-field appearance="outline">
+          <mat-label>Nombre</mat-label>
+          <input matInput name="name" required />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Email</mat-label>
+          <input matInput name="email" type="email" required />
+        </mat-form-field>
+        <button mat-raised-button color="primary" type="submit" [disabled]="loadingSigners()">Agregar</button>
+      </form>
+      <div *ngIf="error()" class="error">{{ error() }}</div>
+      <div style="margin-top:8px;">
+        <div *ngFor="let s of signers()" style="display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid #eee;">
+          <div>{{ s.name }} — {{ s.email }}</div>
+          <button mat-button color="warn" (click)="remove(s.id)" [disabled]="loadingSigners()">Eliminar</button>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
 </section>
 
 

@@ -1,14 +1,24 @@
 <section class="dashboard-page space-y-4">
-  <header>
-    <h2 class="text-xl font-semibold">Dashboard</h2>
-    <p class="text-slate-500 text-sm">Documentos de la compañía #1</p>
-    <div class="actions"><a routerLink="/documents/new">Nuevo documento</a></div>
-  </header>
+  <mat-toolbar color="primary">
+    <span>Dashboard</span>
+    <span class="spacer"></span>
+    <button mat-raised-button color="accent" routerLink="/documents/new">
+      Nuevo documento
+    </button>
+  </mat-toolbar>
+  <p class="subtitle">Documentos de la compañía #1</p>
 
   
 
-  <div class="bg-white border rounded-lg p-4">
-    <app-documents-table [loading]="loading()" [documents]="documents()"></app-documents-table>
+  <mat-card>
+    <ng-container *ngIf="loading(); else table">
+      <div class="skeleton-row" *ngFor="let i of [1,2,3,4,5]">
+        <div class="skeleton skeleton--wide"></div>
+      </div>
+    </ng-container>
+    <ng-template #table>
+      <app-documents-table [loading]="loading()" [documents]="documents()"></app-documents-table>
+    </ng-template>
     <mat-paginator
       [length]="total()"
       [pageIndex]="page() - 1"
@@ -16,7 +26,7 @@
       [pageSizeOptions]="pageSizeOptions"
       (page)="onPageChange($event)">
     </mat-paginator>
-  </div>
+  </mat-card>
 </section>
 
 
