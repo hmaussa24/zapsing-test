@@ -1,4 +1,10 @@
 .actions{ margin:12px 0 }
 .error{ color:#dc2626 }
+.chip{ padding:2px 8px; border-radius:999px; font-size:.75rem; font-weight:600; }
+.chip--ok{ background:#ecfdf5; color:#065f46; }
+.chip--pending{ background:#fffbeb; color:#92400e; }
+.chip--done{ background:#eff6ff; color:#1e40af; }
+.chip--error{ background:#fef2f2; color:#991b1b; }
+.form--disabled{ opacity:.7; pointer-events:none }
 
 

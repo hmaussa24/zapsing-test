@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
+import { Router, RouterModule, NavigationEnd } from '@angular/router';
 import { DocumentApiService, DocumentDto, Page } from '../../../shared/services/document-api.service';
 import { SignerApiService, SignerDto } from '../../../shared/services/signer-api.service';
 import { DocumentsTableComponent } from '../components/documents-table/documents-table.component';
@@ -39,6 +39,12 @@ export class DashboardPage implements OnInit {
 
   ngOnInit(): void {
     this.load();
+    // Recargar al volver a /dashboard
+    this.router.events.subscribe(ev => {
+      if (ev instanceof NavigationEnd && (ev.urlAfterRedirects?.endsWith('/dashboard') || ev.url?.endsWith('/dashboard'))) {
+        this.load();
+      }
+    });
   }
 
   load(): void {

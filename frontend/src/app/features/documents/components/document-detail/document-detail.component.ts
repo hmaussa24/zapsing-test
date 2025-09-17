@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { DocumentApiService, DocumentDto } from '../../../../shared/services/document-api.service';
 import { SignerApiService, SignerDto } from '../../../../shared/services/signer-api.service';
 import { MatCardModule } from '@angular/material/card';
@@ -33,6 +33,7 @@ export class DocumentDetailComponent implements OnInit {
   private readonly api = inject(DocumentApiService);
   private readonly signerApi = inject(SignerApiService);
   private readonly snack = inject(MatSnackBar);
+  private readonly router = inject(Router);
   id = signal<number>(0);
   doc = signal<DocumentDto | null>(null);
   sending = signal<boolean>(false);
@@ -63,6 +64,7 @@ export class DocumentDetailComponent implements OnInit {
 
   add(ev: Event): void {
     ev.preventDefault();
+    if (this.isLocked()) return;
     const form = ev.target as HTMLFormElement;
     const name = (form.elements.namedItem('name') as HTMLInputElement).value;
     const email = (form.elements.namedItem('email') as HTMLInputElement).value;
@@ -76,6 +78,7 @@ export class DocumentDetailComponent implements OnInit {
   }
 
   remove(signerId: number): void {
+    if (this.isLocked()) return;
     this.loadingSigners.set(true);
     this.signerApi.delete(signerId).subscribe({
       next: () => this.loadSigners(),
@@ -85,12 +88,27 @@ export class DocumentDetailComponent implements OnInit {
   }
 
   send(): void {
+    if (this.isLocked()) return;
     this.sending.set(true);
     this.api.sendToSign(this.id()).subscribe({
-      next: d => { this.doc.set(d); this.snack.open('Documento enviado', 'OK', { duration: 2500 }); },
+      next: d => { this.doc.set(d); this.snack.open('Documento enviado a firmar', 'OK', { duration: 2000 }); this.router.navigate(['/dashboard']); },
       complete: () => this.sending.set(false),
       error: () => { this.sending.set(false); this.snack.open('Error al enviar', 'OK', { duration: 2500 }); }
     });
+  }
+
+  isLocked(): boolean {
+    const s = this.doc()?.status?.toLowerCase();
+    return s === 'pending' || s === 'signed';
+  }
+
+  statusClass(): string {
+    const s = (this.doc()?.status || '').toLowerCase();
+    if (s === 'created' || s === 'ready') return 'chip chip--ok';
+    if (s === 'pending') return 'chip chip--pending';
+    if (s === 'signed' || s === 'completed') return 'chip chip--done';
+    if (s === 'error' || s === 'failed') return 'chip chip--error';
+    return 'chip';
   }
 }
 

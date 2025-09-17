@@ -6,12 +6,12 @@
     </mat-card-header>
     <mat-card-content>
       <div style="display:flex; gap:12px; align-items:center;">
-        <div><strong>Estado:</strong> {{ doc()?.status || '—' }}</div>
+        <div><strong>Estado:</strong> <span [ngClass]="statusClass()">{{ doc()?.status || '—' }}</span></div>
         <mat-progress-spinner *ngIf="sending() || loadingDoc()" diameter="18" mode="indeterminate"></mat-progress-spinner>
       </div>
     </mat-card-content>
     <mat-card-actions>
-      <button mat-raised-button color="accent" (click)="send()" [disabled]="sending()">Enviar a firmar</button>
+      <button mat-raised-button color="accent" (click)="send()" [disabled]="sending() || isLocked()">Enviar a firmar</button>
     </mat-card-actions>
   </mat-card>
 
@@ -21,22 +21,22 @@
       <mat-card-subtitle>Agrega firmantes al documento</mat-card-subtitle>
     </mat-card-header>
     <mat-card-content>
-      <form (submit)="add($event)" style="display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap;">
+      <form (submit)="add($event)" style="display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap;" [class.form--disabled]="isLocked()">
         <mat-form-field appearance="outline">
           <mat-label>Nombre</mat-label>
-          <input matInput name="name" required />
+          <input matInput name="name" required [disabled]="isLocked()" />
         </mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>Email</mat-label>
-          <input matInput name="email" type="email" required />
+          <input matInput name="email" type="email" required [disabled]="isLocked()" />
         </mat-form-field>
-        <button mat-raised-button color="primary" type="submit" [disabled]="loadingSigners()">Agregar</button>
+        <button mat-raised-button color="primary" type="submit" [disabled]="loadingSigners() || isLocked()">Agregar</button>
       </form>
       <div *ngIf="error()" class="error">{{ error() }}</div>
       <div style="margin-top:8px;">
         <div *ngFor="let s of signers()" style="display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid #eee;">
           <div>{{ s.name }} — {{ s.email }}</div>
-          <button mat-button color="warn" (click)="remove(s.id)" [disabled]="loadingSigners()">Eliminar</button>
+          <button mat-button color="warn" (click)="remove(s.id)" [disabled]="loadingSigners() || isLocked()">Eliminar</button>
         </div>
       </div>
     </mat-card-content>

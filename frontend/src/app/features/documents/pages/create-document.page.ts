@@ -75,7 +75,11 @@ export class CreateDocumentPage implements OnInit {
   send(): void {
     const d = this.doc(); if (!d || !this.canSend()) return;
     this.docs.sendToSign(d.id).subscribe({
-      next: (upd) => { this.doc.set(upd); this.snack.open('Enviado a firmar', 'OK', { duration: 2500 }); },
+      next: (upd) => {
+        this.doc.set(upd);
+        this.snack.open('Documento enviado a firmar', 'OK', { duration: 2000 });
+        this.router.navigate(['/dashboard']);
+      },
       error: () => { this.snack.open('Error al enviar', 'OK', { duration: 2500 }); }
     });
   }
