@@ -10,7 +10,6 @@ from modules.document.application.use_cases.delete_document import DeleteDocumen
 from modules.document.infrastructure.repositories.document_repository_django import DjangoDocumentRepository
 from modules.company.infrastructure.repositories.company_repository_django import DjangoCompanyRepository
 from modules.document.infrastructure.adapters.zapsign_client_http import HttpZapSignClient
-from modules.analysis.infrastructure.adapters.automation_notifier_http import HttpAutomationNotifier
 from modules.automation.infrastructure.adapters.rabbitmq_publisher import RabbitMqEventPublisher
 
 
@@ -27,7 +26,6 @@ def make_create_document_use_case() -> CreateDocumentUseCase:
         document_repository=get_document_command_repo(),
         company_repository=DjangoCompanyRepository(),
         zap_sign_client=HttpZapSignClient(),
-        automation_notifier=HttpAutomationNotifier(),
         event_publisher=RabbitMqEventPublisher(),
     )
 
