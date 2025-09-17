@@ -9,9 +9,9 @@ router.register(r'companies', CompanyViewSet, basename='company')
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('auth/register', register),
-    path('auth/login', login),
-    path('auth/me', me),
+    path('auth/register', register, name='company-register'),
+    path('auth/login', login, name='company-login'),
+    path('auth/me', me, name='company-me'),
 ]
 
 

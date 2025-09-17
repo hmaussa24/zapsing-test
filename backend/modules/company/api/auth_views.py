@@ -1,10 +1,11 @@
-from django.http import JsonResponse, HttpRequest
-from django.views.decorators.csrf import csrf_exempt
+from django.http import HttpRequest
 from django.contrib.auth.hashers import make_password, check_password
 import json
 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework import status
 from drf_spectacular.utils import extend_schema, OpenApiExample
 
 from modules.company.infrastructure.django_app.models import Company
@@ -18,7 +19,6 @@ from .serializers import (
 )
 
 
-@csrf_exempt
 @api_view(['POST'])
 @permission_classes([AllowAny])
 @extend_schema(
@@ -43,28 +43,27 @@ from .serializers import (
 )
 def register(request: HttpRequest):
     if request.method != 'POST':
-        return JsonResponse({'detail': 'Method not allowed'}, status=405)
+        return Response({'detail': 'Method not allowed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
     try:
         body = json.loads(request.body.decode('utf-8'))
     except Exception:
-        return JsonResponse({'detail': 'Invalid JSON'}, status=400)
+        return Response({'detail': 'Invalid JSON'}, status=status.HTTP_400_BAD_REQUEST)
     name = (body.get('name') or '').strip()
     email = (body.get('email') or '').strip().lower()
     password = body.get('password') or ''
     if not name or not email or not password:
-        return JsonResponse({'detail': 'Missing fields'}, status=400)
+        return Response({'detail': 'Missing fields'}, status=status.HTTP_400_BAD_REQUEST)
     if Company.objects.filter(email=email).exists():  # type: ignore[attr-defined]
-        return JsonResponse({'detail': 'Email already registered'}, status=400)
+        return Response({'detail': 'Email already registered'}, status=status.HTTP_400_BAD_REQUEST)
     c = Company.objects.create(  # type: ignore[attr-defined]
         name=name,
         api_token='-',
         email=email,
         password_hash=make_password(password),
     )
-    return JsonResponse({'id': c.id, 'name': c.name, 'email': c.email}, status=201)
+    return Response({'id': c.id, 'name': c.name, 'email': c.email}, status=status.HTTP_201_CREATED)
 
 
-@csrf_exempt
 @api_view(['POST'])
 @permission_classes([AllowAny])
 @extend_schema(
@@ -89,21 +88,21 @@ def register(request: HttpRequest):
 )
 def login(request: HttpRequest):
     if request.method != 'POST':
-        return JsonResponse({'detail': 'Method not allowed'}, status=405)
+        return Response({'detail': 'Method not allowed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
     try:
         body = json.loads(request.body.decode('utf-8'))
     except Exception:
-        return JsonResponse({'detail': 'Invalid JSON'}, status=400)
+        return Response({'detail': 'Invalid JSON'}, status=status.HTTP_400_BAD_REQUEST)
     email = (body.get('email') or '').strip().lower()
     password = body.get('password') or ''
     try:
         c = Company.objects.get(email=email)  # type: ignore[attr-defined]
     except Company.DoesNotExist:  # type: ignore[attr-defined]
-        return JsonResponse({'detail': 'Invalid credentials'}, status=400)
+        return Response({'detail': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
     if not check_password(password, c.password_hash or ''):
-        return JsonResponse({'detail': 'Invalid credentials'}, status=400)
+        return Response({'detail': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
     token = encode({'company_id': c.id, 'email': c.email})
-    return JsonResponse({'access': token}, status=200)
+    return Response({'access': token}, status=status.HTTP_200_OK)
 
 
 @extend_schema(
@@ -113,15 +112,15 @@ def login(request: HttpRequest):
 def me(request: HttpRequest):
     auth = request.META.get('HTTP_AUTHORIZATION') or ''
     if not auth.startswith('Bearer '):
-        return JsonResponse({'detail': 'Unauthorized'}, status=401)
+        return Response({'detail': 'Unauthorized'}, status=status.HTTP_401_UNAUTHORIZED)
     token = auth[len('Bearer '):]
     payload = decode(token)
     if not payload or not payload.get('company_id'):
-        return JsonResponse({'detail': 'Unauthorized'}, status=401)
+        return Response({'detail': 'Unauthorized'}, status=status.HTTP_401_UNAUTHORIZED)
     try:
         c = Company.objects.get(id=payload['company_id'])  # type: ignore[attr-defined]
     except Company.DoesNotExist:  # type: ignore[attr-defined]
-        return JsonResponse({'detail': 'Unauthorized'}, status=401)
-    return JsonResponse({'id': c.id, 'name': c.name, 'email': c.email}, status=200)
+        return Response({'detail': 'Unauthorized'}, status=status.HTTP_401_UNAUTHORIZED)
+    return Response({'id': c.id, 'name': c.name, 'email': c.email}, status=status.HTTP_200_OK)
 
 
