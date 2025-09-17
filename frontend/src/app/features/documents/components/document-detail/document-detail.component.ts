@@ -111,6 +111,19 @@ export class DocumentDetailComponent implements OnInit {
     });
   }
 
+  removeDocument(): void {
+    const d = this.doc();
+    if (!d) return;
+    if (!confirm('¿Eliminar este documento?')) return;
+    this.api.delete(d.id).subscribe({
+      next: () => {
+        this.snack.open('Documento eliminado', 'OK', { duration: 2000 });
+        this.router.navigate(['/dashboard']);
+      },
+      error: () => this.snack.open('Error eliminando documento', 'OK', { duration: 2500 })
+    });
+  }
+
   isLocked(): boolean {
     const s = this.doc()?.status?.toLowerCase();
     return s === 'pending' || s === 'signed';

@@ -13,6 +13,8 @@ def orm_to_dto(orm: ORMDocument) -> DocumentDTO:
         open_id=orm.open_id,
         token=orm.token,
         created_at=orm.created_at,
+        has_analysis=getattr(orm, 'has_analysis', None),
+        risk_score=getattr(orm, 'risk_score', None),
     )
 
 

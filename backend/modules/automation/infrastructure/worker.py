@@ -1,5 +1,6 @@
 import json
 import time
+import logging
 from typing import Optional
 
 from django.conf import settings
@@ -8,11 +9,14 @@ from modules.automation.application.dtos import DocumentCreatedEvent
 from modules.analysis.infrastructure.adapters.automation_notifier_http import HttpAutomationNotifier
 
 
+logger = logging.getLogger(__name__)
+
+
 def run_worker(url: Optional[str] = None, queue: Optional[str] = None) -> None:
     amqp_url = url or getattr(settings, 'RABBITMQ_URL', '')
     qname = queue or getattr(settings, 'AUTOMATION_QUEUE', 'document_created')
     if not amqp_url or not qname:
-        print('RabbitMQ not configured; worker idle')
+        logger.warning('RabbitMQ not configured; worker idle')
         while True:
             time.sleep(5)
 
@@ -34,6 +38,7 @@ def run_worker(url: Optional[str] = None, queue: Optional[str] = None) -> None:
                 name=str(payload['name']),
                 pdf_url=str(payload['pdf_url']),
             )
+            logger.info('Worker received event document_id=%s company_id=%s', ev.document_id, ev.company_id)
             notifier.notify_document_created(
                 document_id=ev.document_id,
                 company_id=ev.company_id,
@@ -43,10 +48,11 @@ def run_worker(url: Optional[str] = None, queue: Optional[str] = None) -> None:
             ch.basic_ack(delivery_tag=method.delivery_tag)
         except Exception:
             # nack y requeue simple; para producción usar DLQ y backoff
+            logger.exception('Worker failed processing message; nacking')
             ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
 
     channel.basic_consume(queue=qname, on_message_callback=_cb)
-    print('Worker started; waiting for messages')
+    logger.info('Worker started; waiting for messages on queue=%s', qname)
     channel.start_consuming()
 
 

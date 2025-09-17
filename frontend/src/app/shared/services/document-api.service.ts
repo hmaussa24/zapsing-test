@@ -11,6 +11,8 @@ export interface DocumentDto {
   open_id?: string | null;
   token?: string | null;
   created_at?: string;
+  has_analysis?: boolean;
+  risk_score?: number;
 }
 
 export interface CreateDocumentDto {

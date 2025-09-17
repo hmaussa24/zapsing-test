@@ -2,6 +2,8 @@ from modules.document.application.ports import DocumentCommandRepository, Docume
 from modules.document.application.dtos import DocumentDTO, PageDTO
 from modules.document.infrastructure.django_app.models import Document
 from modules.document.infrastructure.mappers import orm_to_dto
+from django.db.models import Exists, OuterRef, Subquery, Value
+from modules.analysis.infrastructure.django_app.models import DocumentAnalysis
 
 
 class DjangoDocumentRepository(DocumentCommandRepository, DocumentQueryRepository):
@@ -48,6 +50,12 @@ class DjangoDocumentRepository(DocumentCommandRepository, DocumentQueryRepositor
         qs = Document.objects.all()
         if query.company_id is not None:
             qs = qs.filter(company_id=query.company_id)
+        # Anotar análisis: has_analysis y risk_score
+        analysis_qs = DocumentAnalysis.objects.filter(document_id=OuterRef('id')).values('risk_score')[:1]
+        qs = qs.annotate(
+            has_analysis=Exists(DocumentAnalysis.objects.filter(document_id=OuterRef('id'))),
+            risk_score=Subquery(analysis_qs),
+        )
         order_field = query.order_by
         if query.order_dir == 'desc':
             order_field = f'-{order_field}'

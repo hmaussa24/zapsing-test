@@ -17,7 +17,8 @@
       </div>
     </ng-container>
     <ng-template #table>
-      <app-documents-table [loading]="loading()" [documents]="documents()"></app-documents-table>
+      <app-documents-table [loading]="loading()" [documents]="documents()"
+        (deleted)="onDeleted($event)"></app-documents-table>
     </ng-template>
     <mat-paginator
       [length]="total()"

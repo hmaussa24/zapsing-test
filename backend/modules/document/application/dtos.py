@@ -13,6 +13,9 @@ class DocumentDTO:
     open_id: Optional[str] = None
     token: Optional[str] = None
     created_at: Optional[datetime] = None
+    # Campos derivados de análisis (opcionales en listados)
+    has_analysis: Optional[bool] = None
+    risk_score: Optional[float] = None
 
 
 @dataclass

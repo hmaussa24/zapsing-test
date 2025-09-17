@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule, NavigationEnd } from '@angular/router';
-import { DocumentApiService, DocumentDto, Page } from '../../../shared/services/document-api.service';
+import { DocumentApiService, DocumentDto, DocumentAnalysisDto, Page } from '../../../shared/services/document-api.service';
 import { SignerApiService, SignerDto } from '../../../shared/services/signer-api.service';
 import { DocumentsTableComponent } from '../components/documents-table/documents-table.component';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
@@ -166,6 +166,11 @@ export class DashboardPage implements OnInit {
         setTimeout(() => this.toast.set(null), 3000);
       }
     });
+  }
+
+  onDeleted(id: number): void {
+    this.documents.set(this.documents().filter(d => d.id !== id));
+    this.total.update(t => Math.max(0, t - 1));
   }
 }
 

@@ -16,6 +16,8 @@ class DocumentSerializer(serializers.Serializer):
     open_id = serializers.CharField(allow_null=True, required=False)
     token = serializers.CharField(allow_null=True, required=False)
     created_at = serializers.DateTimeField(read_only=True)
+    has_analysis = serializers.BooleanField(required=False)
+    risk_score = serializers.FloatField(required=False)
 
 
 class DocumentUpdateSerializer(serializers.Serializer):

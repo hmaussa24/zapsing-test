@@ -10,7 +10,9 @@
   </thead>
   <tbody>
     <tr *ngFor="let d of documents" [routerLink]="['/documents', d.id]" style="cursor:pointer">
-      <td class="cell-name" title="{{ d.name }}"><a [routerLink]="['/documents', d.id]">{{ d.name }}</a></td>
+      <td class="cell-name" title="{{ d.name }}">
+        <a [routerLink]="['/documents', d.id]">{{ d.name }}</a>
+      </td>
       <td>
         <span class="chip"
           [ngClass]="{
@@ -20,8 +22,17 @@
             'chip--error': d.status === 'error' || d.status === 'failed'
           }"
         >{{ d.status || '—' }}</span>
+        <span class="chip" [ngClass]="riskClass(d.risk_score)" *ngIf="d.has_analysis" style="margin-left:8px;">
+          Score: {{ d.risk_score | number:'1.2-2' }}
+        </span>
+        <span class="chip chip--pending" *ngIf="d.has_analysis === false" style="margin-left:8px;">Sin análisis</span>
       </td>
-      <td>{{ d.created_at | date:'medium' }}</td>
+      <td style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+        <span>{{ d.created_at | date:'medium' }}</span>
+        <button mat-icon-button color="warn" aria-label="Eliminar" (click)="onDelete($event, d.id)">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </td>
     </tr>
   </tbody>
   
