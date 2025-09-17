@@ -1,6 +1,7 @@
 from rest_framework import viewsets, mixins, status
 from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema
+from rest_framework.decorators import action
 
 from modules.document.api.container import (
     make_create_document_use_case,
@@ -9,6 +10,11 @@ from modules.document.api.container import (
     make_update_document_partial_use_case,
     make_delete_document_use_case,
 )
+from modules.document.application.use_cases.send_document_to_sign import SendDocumentToSignUseCase
+from modules.document.application.ports import DocumentCommandRepository, DocumentQueryRepository
+from modules.company.infrastructure.repositories.company_repository_django import DjangoCompanyRepository
+from modules.signer.infrastructure.repositories.signer_repository_django import DjangoSignerRepository
+from modules.document.infrastructure.adapters.zapsign_client_http import HttpZapSignClient
 from modules.document.application.dtos import CreateDocumentDTO
 from modules.document.infrastructure.repositories.document_repository_django import DjangoDocumentRepository
 from modules.company.infrastructure.repositories.company_repository_django import DjangoCompanyRepository
@@ -74,5 +80,22 @@ class DocumentViewSet(mixins.ListModelMixin,
     def destroy(self, request, pk=None, *args, **kwargs):
         ok = make_delete_document_use_case().execute(int(pk))
         return Response(status=status.HTTP_204_NO_CONTENT if ok else status.HTTP_404_NOT_FOUND)
+
+    @action(detail=True, methods=['post'], url_path='send_to_sign')
+    @extend_schema(tags=["Document"], responses=DocumentSerializer)
+    def send_to_sign(self, request, pk=None, *args, **kwargs):
+        doc_commands: DocumentCommandRepository = DjangoDocumentRepository()
+        doc_queries: DocumentQueryRepository = DjangoDocumentRepository()
+        use_case = SendDocumentToSignUseCase(
+            document_commands=doc_commands,
+            document_queries=doc_queries,
+            company_queries=DjangoCompanyRepository(),
+            signer_queries=DjangoSignerRepository(),
+            zap_sign_client=HttpZapSignClient(),
+        )
+        result = use_case.execute(int(pk))
+        if not result:
+            return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
+        return Response(DocumentSerializer(result).data)
 
 

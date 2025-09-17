@@ -88,3 +88,57 @@ class HttpZapSignClient(ZapSignClient):
             return ZapSignCreateResult(open_id=None, token=None, status=None)
 
 
+    def send_for_sign(self, api_token: str, name: str, pdf_url: str, signers: list[dict]) -> ZapSignCreateResult:
+        if not self.base_url or not api_token:
+            logger.warning("ZapSign config incompleta: base_url o api_token ausente")
+            return ZapSignCreateResult(open_id=None, token=None, status=None)
+
+        url = f"{self.base_url}/docs/"
+        headers = {
+            'Authorization': f'{self.auth_scheme} {api_token}',
+            'Content-Type': 'application/json',
+        }
+        payload = {
+            'name': name,
+            'url_pdf': pdf_url,
+            'url': pdf_url,
+            'signers': signers,
+        }
+
+        def _mask(token: str) -> str:
+            if not token:
+                return ''
+            return token[:4] + '...' + token[-4:]
+
+        try:
+            with httpx.Client(timeout=self.timeout_seconds) as client:
+                resp = client.post(url, json=payload, headers=headers)
+                try:
+                    body = resp.json()
+                except Exception:
+                    body = {'raw': resp.text[:500]}
+
+                if resp.is_success:
+                    open_id = body.get('open_id') or body.get('id') or body.get('openId')
+                    token = body.get('token') or body.get('document_token') or body.get('doc_token')
+                    status = body.get('status') or body.get('document_status')
+                    return ZapSignCreateResult(open_id=open_id, token=token, status=status)
+
+                logger.error(
+                    "ZapSign send_for_sign error status=%s url=%s body=%s headers=%s",
+                    resp.status_code,
+                    url,
+                    body,
+                    {**{k: v for k, v in headers.items() if k.lower() != 'authorization'}, 'Authorization': f"{self.auth_scheme} {_mask(api_token)}"},
+                )
+                return ZapSignCreateResult(open_id=None, token=None, status=None)
+        except Exception as exc:
+            logger.exception(
+                "ZapSign send_for_sign exception url=%s payload=%s error=%s",
+                url,
+                {**payload, 'signers': f"{len(signers)} signers"},
+                exc,
+            )
+            return ZapSignCreateResult(open_id=None, token=None, status=None)
+
+

@@ -18,6 +18,7 @@ class DocumentQueryRepository(Protocol):
 
 class ZapSignClient(Protocol):
     def create(self, api_token: str, name: str, pdf_url: str) -> ZapSignCreateResult: ...
+    def send_for_sign(self, api_token: str, name: str, pdf_url: str, signers: list[dict]) -> ZapSignCreateResult: ...
 
 
 @dataclass
