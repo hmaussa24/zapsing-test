@@ -23,6 +23,14 @@ class CreateDocumentDTO:
 
 
 @dataclass
+class PageDTO:
+    count: int
+    results: list[DocumentDTO]
+    next: Optional[str] = None
+    previous: Optional[str] = None
+
+
+@dataclass
 class ZapSignCreateResult:
     open_id: Optional[str]
     token: Optional[str]

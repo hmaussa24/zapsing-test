@@ -1,5 +1,6 @@
 from typing import Protocol, Optional
-from .dtos import DocumentDTO, ZapSignCreateResult
+from dataclasses import dataclass
+from .dtos import DocumentDTO, ZapSignCreateResult, PageDTO
 
 
 class DocumentRepository(Protocol):
@@ -9,8 +10,18 @@ class DocumentRepository(Protocol):
     def update_partial(self, document_id: int, **fields) -> Optional[DocumentDTO]: ...
     def delete(self, document_id: int) -> bool: ...
     def list_by_company(self, company_id: int) -> list[DocumentDTO]: ...
+    def list_paginated(self, query: 'ListDocumentsQuery') -> PageDTO: ...
 
 
 class ZapSignClient(Protocol):
     def create(self, api_token: str, name: str, pdf_url: str) -> ZapSignCreateResult: ...
+
+
+@dataclass
+class ListDocumentsQuery:
+    company_id: Optional[int] = None
+    page: int = 1
+    page_size: int = 10
+    order_by: str = 'created_at'
+    order_dir: str = 'desc'
 

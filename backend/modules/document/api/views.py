@@ -3,6 +3,10 @@ from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema
 
 from modules.document.application.use_cases.create_document import CreateDocumentUseCase
+from modules.document.application.use_cases.list_documents import ListDocumentsUseCase
+from modules.document.application.use_cases.get_document import GetDocumentUseCase
+from modules.document.application.use_cases.update_document_partial import UpdateDocumentPartialUseCase
+from modules.document.application.use_cases.delete_document import DeleteDocumentUseCase
 from modules.document.application.dtos import CreateDocumentDTO
 from modules.document.infrastructure.repositories.document_repository_django import DjangoDocumentRepository
 from modules.company.infrastructure.repositories.company_repository_django import DjangoCompanyRepository
@@ -42,21 +46,21 @@ class DocumentViewSet(mixins.ListModelMixin,
     @extend_schema(tags=["Document"], responses=DocumentSerializer(many=True))
     def list(self, request, *args, **kwargs):
         company_id = request.query_params.get('company_id')
-        repo = DjangoDocumentRepository()
-        if company_id:
-            items = repo.list_by_company(int(company_id))
-        else:
-            items = repo.list_all()
-        page = self.paginate_queryset(items)
-        if page is not None:
-            serializer_data = [DocumentSerializer(i).data for i in page]
-            return self.get_paginated_response(serializer_data)
-        data = [DocumentSerializer(i).data for i in items]
-        return Response(data)
+        page = int(request.query_params.get('page', 1))
+        page_size = int(request.query_params.get('page_size', 10))
+        use_case = ListDocumentsUseCase(DjangoDocumentRepository())
+        page_dto = use_case.execute(company_id=int(company_id) if company_id else None, page=page, page_size=page_size)
+        # Adaptador HTTP: devuelve estructura paginada
+        return Response({
+            'count': page_dto.count,
+            'next': page_dto.next,
+            'previous': page_dto.previous,
+            'results': [DocumentSerializer(i).data for i in page_dto.results]
+        })
 
     @extend_schema(tags=["Document"], responses=DocumentSerializer)
     def retrieve(self, request, pk=None, *args, **kwargs):
-        item = DjangoDocumentRepository().get_by_id(int(pk))
+        item = GetDocumentUseCase(DjangoDocumentRepository()).execute(int(pk))
         if not item:
             return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
         return Response(DocumentSerializer(item).data)
@@ -65,14 +69,14 @@ class DocumentViewSet(mixins.ListModelMixin,
     def partial_update(self, request, pk=None, *args, **kwargs):
         serializer = DocumentUpdateSerializer(data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
-        updated = DjangoDocumentRepository().update_partial(int(pk), **serializer.validated_data)
+        updated = UpdateDocumentPartialUseCase(DjangoDocumentRepository()).execute(int(pk), **serializer.validated_data)
         if not updated:
             return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
         return Response(DocumentSerializer(updated).data)
 
     @extend_schema(tags=["Document"], responses={204: None, 404: None})
     def destroy(self, request, pk=None, *args, **kwargs):
-        ok = DjangoDocumentRepository().delete(int(pk))
+        ok = DeleteDocumentUseCase(DjangoDocumentRepository()).execute(int(pk))
         return Response(status=status.HTTP_204_NO_CONTENT if ok else status.HTTP_404_NOT_FOUND)
 
 

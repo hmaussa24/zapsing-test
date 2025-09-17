@@ -43,13 +43,20 @@ def test_list_documents_api(client):
             content_type="application/json",
         )
 
-    resp = client.get("/api/documents/")
+    resp = client.get("/api/documents/?page=1&page_size=1")
     assert resp.status_code == 200
     body = resp.json()
     assert isinstance(body, dict)
-    assert "results" in body
-    assert isinstance(body["results"], list)
-    assert len(body["results"]) >= 2
+    assert body["count"] >= 2
+    assert isinstance(body.get("results"), list)
+    assert len(body["results"]) == 1
+
+    # segunda página
+    resp2 = client.get("/api/documents/?page=2&page_size=1")
+    assert resp2.status_code == 200
+    body2 = resp2.json()
+    assert isinstance(body2, dict)
+    assert len(body2["results"]) == 1
 
 
 @pytest.mark.django_db
