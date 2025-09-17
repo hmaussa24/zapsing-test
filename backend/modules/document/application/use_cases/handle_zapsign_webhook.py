@@ -22,13 +22,41 @@ class HandleZapSignWebhookUseCase:
         if not doc:
             return None
 
+        # Idempotencia y progresión de estados (evitar regresiones y duplicados)
+        def normalize(s: Optional[str]) -> Optional[str]:
+            return s.lower() if isinstance(s, str) else s
+
+        current_status = normalize(doc.status)
+        incoming_status = normalize(status)
+
+        status_rank = {
+            None: -1,
+            'created': 0,
+            'ready': 1,
+            'pending': 2,
+            'sent': 3,
+            'signed': 4,
+            'completed': 5,
+            'error': 99,
+            'failed': 99,
+        }
+
+        should_update_status = False
+        if incoming_status is not None:
+            # Actualizar si es diferente y representa un avance o un estado terminal (error/failed)
+            if incoming_status in ('error', 'failed'):
+                should_update_status = current_status not in ('signed', 'completed') and current_status != incoming_status
+            else:
+                should_update_status = status_rank.get(incoming_status, -1) > status_rank.get(current_status, -1)
+
         fields: dict = {}
-        if status:
-            fields['status'] = status
-        if token:
+        if should_update_status and incoming_status:
+            fields['status'] = incoming_status
+        if token and token != doc.token:
             fields['token'] = token
 
         if not fields:
+            # No hay cambios que aplicar → idempotente
             return doc
 
         updated = self.document_commands.update_partial(doc.id, **fields)
