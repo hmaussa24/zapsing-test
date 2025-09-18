@@ -56,7 +56,8 @@ services:
       START_AUTOMATION_WORKER: "true"
       ACCESS_TOKEN_LIFETIME_SECONDS: 60
       REFRESH_TOKEN_LIFETIME_SECONDS: 86400
-      N8N_WEBHOOK_URL: https://hmaussa1.app.n8n.cloud/webhook/document-analysis
+      N8N_WEBHOOK_URL: http://n8n:5678/webhook/document-analysis
+      # N8N_WEBHOOK_URL: https://hmaussa1.app.n8n.cloud/webhook/document-analysis
     ports:
       - "8000:8000"
     depends_on:
@@ -87,7 +88,7 @@ services:
       START_AUTOMATION_WORKER: "true"
       ACCESS_TOKEN_LIFETIME_SECONDS: 60
       REFRESH_TOKEN_LIFETIME_SECONDS: 86400
-      N8N_WEBHOOK_URL: https://hmaussa1.app.n8n.cloud/webhook/document-analysis
+      N8N_WEBHOOK_URL: http://n8n:5678/webhook/document-analysis
     depends_on:
       db:
         condition: service_healthy
@@ -95,6 +96,24 @@ services:
         condition: service_healthy
     volumes:
       - ./backend:/app
+    restart: unless-stopped
+
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: zapsign-n8n
+    ports:
+      - "5678:5678"
+    environment:
+      N8N_BASIC_AUTH_ACTIVE: "true"
+      N8N_BASIC_AUTH_USER: zapsign
+      N8N_BASIC_AUTH_PASSWORD: zapsign
+      N8N_HOST: localhost
+      N8N_PORT: 5678
+      N8N_PROTOCOL: http
+      TZ: UTC
+      GENERIC_TIMEZONE: UTC
+    volumes:
+      - n8n_data:/home/node/.n8n
     restart: unless-stopped
 
   frontend:
@@ -115,5 +134,6 @@ services:
 volumes:
   postgres_data: {}
   rabbitmq_data: {}
+  n8n_data: {}
 
 

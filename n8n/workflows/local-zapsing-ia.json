@@ -1,0 +1,280 @@
+{
+  "name": "local-zapsing-ia",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "document-analysis",
+        "options": {}
+      },
+      "id": "b5533d40-be2d-4739-8f50-8b5ce6d76a0a",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        160
+      ],
+      "webhookId": "3788ffc9-c20d-4576-a255-02b5650e1ce2"
+    },
+    {
+      "parameters": {
+        "url": "=https://r.jina.ai/{{ $json.body.document.pdf_url }}",
+        "options": {}
+      },
+      "id": "80f0319f-6aa2-4158-940e-31deeb493752",
+      "name": "Extract PDF (Jina)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        0,
+        0
+      ],
+      "alwaysOutputData": false,
+      "executeOnce": false,
+      "retryOnFail": false
+    },
+    {
+      "parameters": {
+        "jsCode": "function extractJson(str){\n  const m = str.match(/\\{[\\s\\S]*\\}$/);\n  if (m) { try { return JSON.parse(m[0]); } catch(_){} }\n  try { return JSON.parse(str); } catch(_) {}\n  return null;\n}\n\n// Respuesta del HF node (string o objeto)\nconst hfRaw = $input.first().json.content.parts[0].text;\n\nconst data = extractJson(hfRaw) || {\n  document_id: 0,\n  company_id: 0,\n  summary: '',\n  risk_score: 0.0,\n  missing_topics: '',\n  insights: '',\n  model_info: { provider: 'google', model:  'gemeni'    }\n}; \nreturn [{\n  json: {\n    document_id: data.document,\n    company_id: data.company_id,\n    summary: data.summary,\n    entities: data.entities,\n    risk_score: data.risk_score,\n    missing_topics: data.missing_topics,\n    insights: data.insights,\n    model_info: data.model_info,\n    status: 'done'\n  }\n}];"
+      },
+      "id": "23d7a1ae-bf30-4335-bc8f-b1b612a65ea7",
+      "name": "Parse JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1104,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:8000/api/webhooks/analysis/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Automation-Key",
+              "value": "key-secret-val-change-please"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "summary",
+              "value": "={{ $json.summary }}"
+            },
+            {
+              "name": "document_id",
+              "value": "={{ $json.document_id }}"
+            },
+            {
+              "name": "company_id",
+              "value": "={{ $json.document_id }}"
+            },
+            {
+              "name": "risk_score",
+              "value": "={{ $json.risk_score }}"
+            },
+            {
+              "name": "status",
+              "value": "={{ $json.model_info.status }}"
+            },
+            {
+              "name": "insights",
+              "value": "={{ $json.insights }}"
+            },
+            {
+              "name": "missing_topics",
+              "value": "={{ $json.missing_topics }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a2bfd4c6-3044-47d0-abac-cef1613c6889",
+      "name": "Callback Backend",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1392,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash-lite-preview-06-17",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash-lite-preview-06-17"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Eres un asistente legal. Analiza el siguiente texto de un contrato.\nDevuelve EXCLUSIVAMENTE un JSON válido con esta forma exacta:\n{\n  \"document\": {{ $json.document.id }}\n  \"company_id\": {{ $json.document.company_id }}\n  \"summary\": string,\n  \"risk_score\": number,\n  \"missing_topics\": string,\n  \"insights\": string,\n  \"model_info\": {\"provider\": \"GOOGLE\", \"model\": \"gemini\"\n   \"status\": \"done\"\n}\nSi no estás seguro en algún campo lo devuelves con el valor \"indefinido\"\n{{ $json.pdf }}\n",
+              "role": "=user"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        736,
+        96
+      ],
+      "id": "6e7018f8-ca22-44b1-81d4-735270fbecb6",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "JStj0IflDDpGIo8y",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combineBySql",
+        "query": "SELECT * FROM input1 LEFT JOIN input2",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        400,
+        128
+      ],
+      "id": "b8fee86e-03d6-4dcc-858b-e3a3fe6abe89",
+      "name": "Merge",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $json.data\n\nreturn [{\n  json: {\n  pdf: data\n  }\n}];"
+      },
+      "id": "8f3084f0-49c1-4a9f-af11-9aa457ec80f8",
+      "name": "dataPDF",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $json.body.document\n\nreturn [{\n  json: {\n  document: data\n  }\n}];"
+      },
+      "id": "1d127010-17c9-46af-8521-ea49ba552e69",
+      "name": "dataPDF1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        96,
+        176
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Extract PDF (Jina)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "dataPDF1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract PDF (Jina)": {
+      "main": [
+        [
+          {
+            "node": "dataPDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse JSON": {
+      "main": [
+        [
+          {
+            "node": "Callback Backend",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Parse JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "dataPDF": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "dataPDF1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "d6372267-473a-4180-9c96-5fe840e4e7d5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "233cc548194241212ef5d7f47bf4a1fa1c784a57413d2f4bb9e84e58d076377c"
+  },
+  "id": "6tyrufF5bvc98U3I",
+  "tags": []
+}
