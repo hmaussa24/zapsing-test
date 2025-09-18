@@ -1,3 +1,165 @@
+## Cómo ejecutar el proyecto
+
+### Opción A) Con Docker (recomendado)
+
+Requisitos: Docker Desktop/Engine y Docker Compose.
+
+1) Construir e iniciar servicios
+```bash
+docker compose build --no-cache
+docker compose up -d
+```
+
+2) Endpoints y accesos
+- Frontend: http://localhost:4200
+- Backend (API): http://localhost:8000
+- Swagger UI: http://localhost:8000/api/docs/
+- RabbitMQ UI: http://localhost:15672 (user/pass: zapsign/zapsign)
+
+3) Variables de entorno (ya definidas en docker-compose.yml)
+- Backend:
+  - `DJANGO_SECRET_KEY`: insecure-dev-key (dev)
+  - `DJANGO_DEBUG`: "True"
+  - `ALLOWED_HOSTS`: `127.0.0.1,localhost,.ngrok-free.app`
+  - `CSRF_TRUSTED_ORIGINS`: `https://.ngrok-free.app`
+  - `DATABASE_URL`: `postgres://zapsign:password@db:5432/zapsign`
+  - `ZAPSIGN_API_BASE`: `https://sandbox.api.zapsign.com.br/api/v1`
+  - `ZAPSIGN_AUTH_SCHEME`: `Bearer`
+  - `AUTOMATION_API_KEY`: clave para n8n (ajusta)
+  - `RABBITMQ_URL`: `amqp://zapsign:zapsign@rabbitmq:5672/%2F`
+  - `AUTOMATION_QUEUE`: `document_created`
+  - `START_AUTOMATION_WORKER`: `true` (ejecuta worker junto al backend)
+  - `ACCESS_TOKEN_LIFETIME_SECONDS`: `60`
+  - `REFRESH_TOKEN_LIFETIME_SECONDS`: `86400`
+  - `N8N_WEBHOOK_URL`: URL de webhook en n8n (ajusta)
+- Frontend:
+  - `API_BASE_URL`: `http://backend:8000` (el proxy lee esta variable)
+
+Notas:
+- El servicio `rabbitmq` tiene healthcheck y `backend/worker` esperan a que esté "healthy".
+- El frontend usa `proxy.conf.js` dinámico que reenvía `/api` a `API_BASE_URL`.
+
+Comandos útiles
+```bash
+docker compose logs -f backend
+docker compose restart frontend backend worker
+docker compose down
+```
+
+---
+
+### Opción B) Sin Docker (servicios individuales)
+
+Puedes levantar Postgres y RabbitMQ con Docker y correr backend y frontend localmente.
+
+1) Base de datos y cola (con Docker)
+```bash
+docker compose up -d db rabbitmq
+# Postgres disponible en localhost:55432 (mapea 5432 del contenedor)
+# RabbitMQ UI en http://localhost:15672 (zapsign/zapsign)
+```
+
+2) Backend (Django)
+```bash
+python3 -m venv backend/.venv
+backend/.venv/bin/pip install -U pip
+backend/.venv/bin/pip install -r backend/requirements.txt
+```
+
+Configura variables (archivo `backend/.env` recomendado) mínimas para dev:
+```env
+DJANGO_SECRET_KEY=insecure-dev-key
+DJANGO_DEBUG=True
+ALLOWED_HOSTS=127.0.0.1,localhost
+CSRF_TRUSTED_ORIGINS=http://localhost:4200
+DATABASE_URL=postgres://zapsign:password@localhost:55432/zapsign
+ZAPSIGN_API_BASE=https://sandbox.api.zapsign.com.br/api/v1
+ZAPSIGN_AUTH_SCHEME=Bearer
+RABBITMQ_URL=amqp://zapsign:zapsign@localhost:5672/%2F
+AUTOMATION_QUEUE=document_created
+START_AUTOMATION_WORKER=true
+ACCESS_TOKEN_LIFETIME_SECONDS=60
+REFRESH_TOKEN_LIFETIME_SECONDS=86400
+N8N_WEBHOOK_URL=https://<tu-n8n>/webhook/document-analysis
+```
+
+Aplicar migraciones y arrancar:
+```bash
+backend/.venv/bin/python backend/manage.py migrate
+backend/.venv/bin/python backend/manage.py runserver 0.0.0.0:8000
+```
+
+3) Frontend (Angular)
+```bash
+cd frontend
+npm install
+export API_BASE_URL=http://localhost:8000
+npm start
+# Abre http://localhost:4200
+```
+
+El frontend usa `proxy.conf.js`, que lee `API_BASE_URL` y redirige `/api` hacia ese backend.
+
+---
+
+### Tests (Backend)
+
+Puedes ejecutar la suite de tests con pytest. Asegúrate de tener configurada la base de datos indicada en `DATABASE_URL` (o usar SQLite por defecto si no se define) y las dependencias instaladas.
+
+Con Docker (recomendado):
+```bash
+# Instalar dependencias (si cambiaste requirements)
+docker compose build backend
+# Ejecutar tests dentro del contenedor backend
+docker compose run --rm backend pytest -q
+```
+
+Local sin Docker (rápido con SQLite):
+```bash
+python3 -m venv backend/.venv
+backend/.venv/bin/pip install -U pip
+backend/.venv/bin/pip install -r backend/requirements.txt
+
+# No definas DATABASE_URL para que use SQLite por defecto
+unset DATABASE_URL 2>/dev/null || true
+
+# Ejecutar tests
+backend/.venv/bin/pytest -q
+```
+
+Local sin Docker (usando Postgres de Docker):
+```bash
+python3 -m venv backend/.venv
+backend/.venv/bin/pip install -U pip
+backend/.venv/bin/pip install -r backend/requirements.txt
+
+# Variables mínimas (opcional si usas SQLite por defecto)
+export DJANGO_DEBUG=False
+export DATABASE_URL=postgres://zapsign:password@localhost:55432/zapsign
+
+# Ejecutar tests
+backend/.venv/bin/pytest -q
+```
+
+Cobertura:
+```bash
+# Generar y ver reporte de cobertura en terminal
+backend/.venv/bin/pytest --cov=. -q
+```
+
+Ejemplos útiles:
+```bash
+# Ejecutar un archivo específico
+backend/.venv/bin/pytest backend/tests/document/test_document_api.py -q
+
+# Ejecutar con más detalle
+backend/.venv/bin/pytest -vv
+
+# Generar reporte HTML de cobertura
+backend/.venv/bin/pytest --cov=. --cov-report=html
+# Abrir htmlcov/index.html en tu navegador
+```
+
 ## ZapSign — Reglas y configuración de Cursor
 
 ### Rules del workspace
