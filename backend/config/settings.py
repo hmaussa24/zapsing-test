@@ -114,6 +114,8 @@ SIMPLE_JWT = {
     'ALGORITHM': 'HS256',
     'SIGNING_KEY': SECRET_KEY,
     'AUTH_HEADER_TYPES': ('Bearer',),
+    'ACCESS_TOKEN_LIFETIME': env.timedelta('ACCESS_TOKEN_LIFETIME', default=60),
+    'REFRESH_TOKEN_LIFETIME': env.timedelta('REFRESH_TOKEN_LIFETIME', default=86400),
 }
 
 # ZapSign

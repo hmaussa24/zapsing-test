@@ -10,7 +10,7 @@ from drf_spectacular.utils import extend_schema
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from modules.company.infrastructure.django_app.models import Company
-from .token import encode, decode
+from .token import company_id_from_request
 from .serializers import (
     CompanyRegisterRequestSerializer,
     CompanyRegisterResponseSerializer,
@@ -82,12 +82,11 @@ def me(request: HttpRequest):
     auth = request.META.get('HTTP_AUTHORIZATION') or ''
     if not auth.startswith('Bearer '):
         return Response({'detail': 'Unauthorized'}, status=status.HTTP_401_UNAUTHORIZED)
-    token = auth[len('Bearer '):]
-    payload = decode(token)
-    if not payload or not payload.get('company_id'):
+    cid = company_id_from_request(request)
+    if not cid:
         return Response({'detail': 'Unauthorized'}, status=status.HTTP_401_UNAUTHORIZED)
     try:
-        c = Company.objects.get(id=payload['company_id'])  # type: ignore[attr-defined]
+        c = Company.objects.get(id=cid)  # type: ignore[attr-defined]
     except Company.DoesNotExist:  # type: ignore[attr-defined]
         return Response({'detail': 'Unauthorized'}, status=status.HTTP_401_UNAUTHORIZED)
     return Response({'id': c.id, 'name': c.name, 'email': c.email}, status=status.HTTP_200_OK)
