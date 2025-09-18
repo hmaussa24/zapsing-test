@@ -48,10 +48,10 @@ class DocumentViewSet(mixins.ListModelMixin,
         serializer = DocumentCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
-        cid = company_id_from_request(request)
+        cid = data.get('company_id') or company_id_from_request(request)
         if not cid:
             return Response({"detail": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
-        result = make_create_document_use_case().execute(CreateDocumentDTO(company_id=cid, name=data['name'], pdf_url=data['pdf_url']))
+        result = make_create_document_use_case().execute(CreateDocumentDTO(company_id=int(cid), name=data['name'], pdf_url=data['pdf_url']))
         return Response(DocumentSerializer(result).data, status=status.HTTP_201_CREATED)
 
     @extend_schema(tags=["Document"], responses=DocumentSerializer(many=True))

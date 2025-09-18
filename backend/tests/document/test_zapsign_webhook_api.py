@@ -3,17 +3,13 @@ import pytest
 
 
 @pytest.mark.django_db
-def test_webhook_updates_status_by_open_id(client):
+def test_webhook_updates_status_by_open_id(client, auth_headers, auth_company_id):
     # Crear compañía y documento
-    company = client.post(
-        "/api/companies/",
-        data=json.dumps({"name": "Acme", "api_token": "t"}),
-        content_type="application/json",
-    ).json()
     doc = client.post(
         "/api/documents/",
-        data=json.dumps({"company_id": company["id"], "name": "Contrato", "pdf_url": "https://e.com/a.pdf"}),
+        data=json.dumps({"company_id": auth_company_id, "name": "Contrato", "pdf_url": "https://e.com/a.pdf"}),
         content_type="application/json",
+        **auth_headers,
     ).json()
 
     # Simular que el documento tiene open_id asignado por ZapSign
@@ -33,7 +29,7 @@ def test_webhook_updates_status_by_open_id(client):
     assert resp.status_code in (200, 204)
 
     # Verificar que el estado del documento cambió
-    updated = client.get(f"/api/documents/{doc['id']}/").json()
+    updated = client.get(f"/api/documents/{doc['id']}/", **auth_headers).json()
     assert updated.get("status") in ("signed", "completed")
 
 
@@ -49,16 +45,12 @@ def test_webhook_invalid_payload_returns_400(client):
 
 
 @pytest.mark.django_db
-def test_webhook_idempotent_same_status_twice(client):
-    company = client.post(
-        "/api/companies/",
-        data=json.dumps({"name": "Acme", "api_token": "t"}),
-        content_type="application/json",
-    ).json()
+def test_webhook_idempotent_same_status_twice(client, auth_headers, auth_company_id):
     doc = client.post(
         "/api/documents/",
-        data=json.dumps({"company_id": company["id"], "name": "Contrato", "pdf_url": "https://e.com/a.pdf"}),
+        data=json.dumps({"company_id": auth_company_id, "name": "Contrato", "pdf_url": "https://e.com/a.pdf"}),
         content_type="application/json",
+        **auth_headers,
     ).json()
 
     from modules.document.infrastructure.django_app.models import Document as ORMDocument
@@ -71,21 +63,17 @@ def test_webhook_idempotent_same_status_twice(client):
     assert resp1.status_code in (200, 204)
     resp2 = client.post("/api/webhooks/zapsign/", data=json.dumps(payload), content_type="application/json")
     assert resp2.status_code in (200, 204)
-    updated = client.get(f"/api/documents/{doc['id']}/").json()
+    updated = client.get(f"/api/documents/{doc['id']}/", **auth_headers).json()
     assert updated.get("status") in ("signed", "completed")
 
 
 @pytest.mark.django_db
-def test_webhook_no_regression_after_signed(client):
-    company = client.post(
-        "/api/companies/",
-        data=json.dumps({"name": "Acme", "api_token": "t"}),
-        content_type="application/json",
-    ).json()
+def test_webhook_no_regression_after_signed(client, auth_headers, auth_company_id):
     doc = client.post(
         "/api/documents/",
-        data=json.dumps({"company_id": company["id"], "name": "Contrato", "pdf_url": "https://e.com/a.pdf"}),
+        data=json.dumps({"company_id": auth_company_id, "name": "Contrato", "pdf_url": "https://e.com/a.pdf"}),
         content_type="application/json",
+        **auth_headers,
     ).json()
 
     from modules.document.infrastructure.django_app.models import Document as ORMDocument
@@ -98,7 +86,7 @@ def test_webhook_no_regression_after_signed(client):
     payload = {"open_id": "oid-789", "status": "pending"}
     resp = client.post("/api/webhooks/zapsign/", data=json.dumps(payload), content_type="application/json")
     assert resp.status_code in (200, 204)
-    updated = client.get(f"/api/documents/{doc['id']}/").json()
+    updated = client.get(f"/api/documents/{doc['id']}/", **auth_headers).json()
     assert updated.get("status") in ("signed", "completed")
 
 

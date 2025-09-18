@@ -34,7 +34,7 @@ def register(request: HttpRequest):
     email = (body.get('email') or '').strip().lower()
     password = body.get('password') or ''
     api_token = (body.get('api_token') or '').strip()
-    if not name or not email or not password or not api_token:
+    if not name or not email or not password:
         return Response({'detail': 'Missing fields'}, status=status.HTTP_400_BAD_REQUEST)
     if Company.objects.filter(email=email).exists():  # type: ignore[attr-defined]
         return Response({'detail': 'Email already registered'}, status=status.HTTP_400_BAD_REQUEST)
@@ -75,10 +75,9 @@ def login(request: HttpRequest):
     return Response({'access': str(access), 'refresh': str(refresh)}, status=status.HTTP_200_OK)
 
 
-@extend_schema(
-    tags=["Company Auth"],
-    responses={200: CompanyMeResponseSerializer, 401: None},
-)
+@api_view(['GET'])
+@permission_classes([AllowAny])
+@extend_schema(tags=["Company Auth"], responses={200: CompanyMeResponseSerializer, 401: None})
 def me(request: HttpRequest):
     auth = request.META.get('HTTP_AUTHORIZATION') or ''
     if not auth.startswith('Bearer '):

@@ -25,8 +25,7 @@ class InMemoryDocRepo(DocumentCommandRepository):
 def test_publish_event_on_create_document():
     repo = InMemoryDocRepo()
     publisher = Mock(spec=EventPublisher)
-    use_case = CreateDocumentUseCase(document_repository=repo, automation_notifier=None)
-    # Monkey-patch: añadimos publisher ad hoc sin romper constructor
+    use_case = CreateDocumentUseCase(document_repository=repo)
     setattr(use_case, 'event_publisher', publisher)
 
     dto = CreateDocumentDTO(company_id=1, name='Doc', pdf_url='http://e.com/a.pdf')

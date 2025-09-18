@@ -16,65 +16,43 @@ def test_create_company_api(client, settings):
 
 
 @pytest.mark.django_db
-def test_list_companies_api(client):
-    # crear dos compañías
-    client.post("/api/companies/", data=json.dumps({"name": "A", "api_token": "t1"}), content_type="application/json")
-    client.post("/api/companies/", data=json.dumps({"name": "B", "api_token": "t2"}), content_type="application/json")
-
-    resp = client.get("/api/companies/")
+def test_list_companies_api(client, auth_headers, auth_company_id):
+    resp = client.get("/api/companies/", **auth_headers)
     assert resp.status_code == 200
     items = resp.json()
     assert isinstance(items, list)
-    assert len(items) >= 2
-    names = {i["name"] for i in items}
-    assert {"A", "B"}.issubset(names)
+    assert len(items) == 1
+    assert items[0]["id"] == auth_company_id
 
 
 @pytest.mark.django_db
-def test_retrieve_company_api(client):
-    created = client.post("/api/companies/", data=json.dumps({"name": "Acme", "api_token": "t"}), content_type="application/json").json()
-    company_id = created["id"]
-
-    resp = client.get(f"/api/companies/{company_id}/")
+def test_retrieve_company_api(client, auth_headers, auth_company_id):
+    resp = client.get(f"/api/companies/{auth_company_id}/", **auth_headers)
     assert resp.status_code == 200
     body = resp.json()
-    assert body["id"] == company_id
-    assert body["name"] == "Acme"
+    assert body["id"] == auth_company_id
 
 
 @pytest.mark.django_db
-def test_update_company_api(client):
-    created = client.post(
-        "/api/companies/",
-        data=json.dumps({"name": "Acme", "api_token": "t"}),
-        content_type="application/json",
-    ).json()
-    company_id = created["id"]
-
+def test_update_company_api(client, auth_headers, auth_company_id):
     resp = client.patch(
-        f"/api/companies/{company_id}/",
+        f"/api/companies/{auth_company_id}/",
         data=json.dumps({"name": "Acme Updated"}),
         content_type="application/json",
+        **auth_headers,
     )
     assert resp.status_code in (200, 202)
     body = resp.json()
-    assert body["id"] == company_id
+    assert body["id"] == auth_company_id
     assert body["name"] == "Acme Updated"
 
 
 @pytest.mark.django_db
-def test_delete_company_api(client):
-    created = client.post(
-        "/api/companies/",
-        data=json.dumps({"name": "ToDelete", "api_token": "t"}),
-        content_type="application/json",
-    ).json()
-    company_id = created["id"]
-
-    resp = client.delete(f"/api/companies/{company_id}/")
+def test_delete_company_api(client, auth_headers, auth_company_id):
+    resp = client.delete(f"/api/companies/{auth_company_id}/", **auth_headers)
     assert resp.status_code in (200, 204)
 
-    resp_get = client.get(f"/api/companies/{company_id}/")
+    resp_get = client.get(f"/api/companies/{auth_company_id}/", **auth_headers)
     assert resp_get.status_code == 404
 
 
