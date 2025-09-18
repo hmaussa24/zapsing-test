@@ -6,7 +6,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
-from drf_spectacular.utils import extend_schema, OpenApiExample
+from drf_spectacular.utils import extend_schema
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from modules.company.infrastructure.django_app.models import Company
 from .token import encode, decode
@@ -21,26 +22,7 @@ from .serializers import (
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
-@extend_schema(
-    tags=["Company Auth"],
-    request=CompanyRegisterRequestSerializer,
-    responses={
-        201: CompanyRegisterResponseSerializer,
-        400: None,
-    },
-    examples=[
-        OpenApiExample(
-            'Registro ejemplo',
-            value={"name": "Acme Corp", "email": "admin@acme.com", "password": "SecurePassword123"},
-            request_only=True,
-        ),
-        OpenApiExample(
-            'Respuesta registro',
-            value={"id": 1, "name": "Acme Corp", "email": "admin@acme.com"},
-            response_only=True,
-        ),
-    ],
-)
+@extend_schema(tags=["Company Auth"], request=CompanyRegisterRequestSerializer, responses={201: CompanyRegisterResponseSerializer, 400: None})
 def register(request: HttpRequest):
     if request.method != 'POST':
         return Response({'detail': 'Method not allowed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
@@ -66,26 +48,7 @@ def register(request: HttpRequest):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
-@extend_schema(
-    tags=["Company Auth"],
-    request=CompanyLoginRequestSerializer,
-    responses={
-        200: CompanyLoginResponseSerializer,
-        400: None,
-    },
-    examples=[
-        OpenApiExample(
-            'Login ejemplo',
-            value={"email": "admin@acme.com", "password": "SecurePassword123"},
-            request_only=True,
-        ),
-        OpenApiExample(
-            'Respuesta login',
-            value={"access": "<jwt>"},
-            response_only=True,
-        ),
-    ],
-)
+@extend_schema(tags=["Company Auth"], request=CompanyLoginRequestSerializer, responses={200: CompanyLoginResponseSerializer, 400: None})
 def login(request: HttpRequest):
     if request.method != 'POST':
         return Response({'detail': 'Method not allowed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
@@ -101,8 +64,14 @@ def login(request: HttpRequest):
         return Response({'detail': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
     if not check_password(password, c.password_hash or ''):
         return Response({'detail': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
-    token = encode({'company_id': c.id, 'email': c.email})
-    return Response({'access': token}, status=status.HTTP_200_OK)
+    refresh = RefreshToken()
+    # Claims en refresh y access
+    refresh['company_id'] = c.id
+    refresh['email'] = c.email
+    access = refresh.access_token
+    access['company_id'] = c.id
+    access['email'] = c.email
+    return Response({'access': str(access), 'refresh': str(refresh)}, status=status.HTTP_200_OK)
 
 
 @extend_schema(

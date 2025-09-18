@@ -96,6 +96,9 @@ REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_PAGINATION_CLASS': 'config.pagination.DefaultPageNumberPagination',
     'PAGE_SIZE': 10,
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
 }
 
 SPECTACULAR_SETTINGS = {
@@ -103,6 +106,14 @@ SPECTACULAR_SETTINGS = {
     'DESCRIPTION': 'API para gestión de Companies, Documents y Signers',
     'VERSION': '1.0.0',
     'COMPONENT_SPLIT_REQUEST': True,
+    'SECURITY': [
+        {'BearerAuth': []},
+    ],
+}
+SIMPLE_JWT = {
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
 # ZapSign

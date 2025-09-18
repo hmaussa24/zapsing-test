@@ -17,6 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
+from rest_framework_simplejwt.views import TokenRefreshView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -24,6 +25,7 @@ urlpatterns = [
     path('api/', include('modules.document.api.urls')),
     path('api/', include('modules.signer.api.urls')),
     path('api/', include('modules.analysis.api.urls')),
+    path('api/auth/refresh', TokenRefreshView.as_view(), name='token_refresh'),
     # OpenAPI schema y UIs
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),

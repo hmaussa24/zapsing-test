@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from drf_spectacular.utils import extend_schema_serializer, OpenApiExample
 
 
 class CompanyCreateSerializer(serializers.Serializer):
@@ -36,6 +37,7 @@ class CompanyLoginRequestSerializer(serializers.Serializer):
 
 class CompanyLoginResponseSerializer(serializers.Serializer):
     access = serializers.CharField()
+    refresh = serializers.CharField()
 
 
 class CompanyMeResponseSerializer(serializers.Serializer):
