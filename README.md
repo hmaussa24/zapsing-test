@@ -10,13 +10,27 @@ docker compose build --no-cache
 docker compose up -d
 ```
 
-2) Endpoints y accesos
+2) Configurar n8n (requerido para análisis de documentos)
+- Acceder a n8n: http://localhost:5678
+- Usuario: `admin` / Contraseña: `admin123`
+- Crear cuenta y configurar:
+  - Ir a "Workflows" → "Import from file"
+  - Importar el archivo `n8n/workflows/local-zapsing-ia.json`
+  - Activar el workflow importado
+  - Configurar API Key de Google AI Studio:
+    - Obtener API key en: https://aistudio.google.com/apikey
+    - En el workflow, editar el nodo "Message a model"
+    - En "Credentials", configurar la API key de Google Gemini
+    - Guardar y activar el workflow
+
+3) Endpoints y accesos
 - Frontend: http://localhost:4200
 - Backend (API): http://localhost:8000
 - Swagger UI: http://localhost:8000/api/docs/
 - RabbitMQ UI: http://localhost:15672 (user/pass: zapsign/zapsign)
+- n8n: http://localhost:5678 (user/pass: admin/admin123)
 
-3) Variables de entorno (ya definidas en docker-compose.yml)
+4) Variables de entorno (ya definidas en docker-compose.yml)
 - Backend:
   - `DJANGO_SECRET_KEY`: insecure-dev-key (dev)
   - `DJANGO_DEBUG`: "True"
