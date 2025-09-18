@@ -22,6 +22,7 @@ class CompanyRegisterRequestSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=255)
     email = serializers.EmailField()
     password = serializers.CharField(min_length=8, write_only=True)
+    api_token = serializers.CharField(max_length=255)
 
 
 class CompanyRegisterResponseSerializer(serializers.Serializer):

@@ -11,7 +11,11 @@
       </div>
     </mat-card-content>
     <mat-card-actions>
-      <button mat-raised-button color="accent" (click)="send" [disabled]="sending() || isLocked()">Enviar a firmar</button>
+      <button mat-raised-button color="accent" (click)="send()" [disabled]="sending() || isLocked()">Enviar a firmar</button>
+      <button mat-stroked-button color="primary" (click)="reanalyze()" [disabled]="reanalyzing() || analysis()?.status === 'running'">
+        Re-analizar
+      </button>
+      <span *ngIf="reanalyzing() || analysis()?.status === 'running'" class="chip chip--pending" style="margin-left:8px;">Analizando…</span>
       <span class="spacer"></span>
       <button mat-icon-button color="warn" aria-label="Eliminar" (click)="removeDocument()">
         <mat-icon>delete</mat-icon>

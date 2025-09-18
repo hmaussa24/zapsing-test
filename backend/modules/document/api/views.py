@@ -22,6 +22,9 @@ from modules.company.infrastructure.repositories.company_repository_django impor
 from modules.document.infrastructure.adapters.zapsign_client_http import HttpZapSignClient
 from .serializers import DocumentCreateSerializer, DocumentSerializer, DocumentUpdateSerializer
 from modules.analysis.infrastructure.repositories.analysis_repository_django import DjangoAnalysisRepository
+from modules.analysis.infrastructure.django_app.models import DocumentAnalysis
+from modules.automation.application.dtos import DocumentCreatedEvent
+from modules.automation.infrastructure.adapters.rabbitmq_publisher import RabbitMqEventPublisher
 
 
 class DocumentViewSet(mixins.ListModelMixin,
@@ -142,5 +145,32 @@ class DocumentViewSet(mixins.ListModelMixin,
             'entities': dto.entities,
             'risk_score': dto.risk_score,
             'status': dto.status,
+            'missing_topics': getattr(dto, 'missing_topics', None),
+            'insights': getattr(dto, 'insights', None),
         })
+
+    @action(detail=True, methods=['post'], url_path='analyze')
+    @extend_schema(tags=["Document"], responses={202: None, 404: None})
+    def analyze(self, request, pk=None, *args, **kwargs):
+        cid = company_id_from_request(request)
+        if not cid:
+            return Response({"detail": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
+        current = make_get_document_use_case().execute(int(pk))
+        if not current or current.company_id != cid:
+            return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
+        # Marcar/crear análisis como 'running' (idempotente)
+        DocumentAnalysis.objects.update_or_create(  # type: ignore[attr-defined]
+            document_id=current.id,
+            defaults={'status': 'running'}
+        )
+        # Re-publicar evento de creación para reactivar el flujo de n8n (reanálisis)
+        RabbitMqEventPublisher().publish_document_created(
+            DocumentCreatedEvent(
+                document_id=current.id,
+                company_id=current.company_id,
+                name=current.name,
+                pdf_url=current.pdf_url,
+            )
+        )
+        return Response({}, status=status.HTTP_202_ACCEPTED)
 

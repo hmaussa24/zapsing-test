@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+from datetime import timedelta
 import environ
 import os
 
@@ -97,7 +98,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'config.pagination.DefaultPageNumberPagination',
     'PAGE_SIZE': 10,
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'modules.company.api.authentication.CompanyJWTAuthentication',
     ),
 }
 
@@ -114,8 +115,9 @@ SIMPLE_JWT = {
     'ALGORITHM': 'HS256',
     'SIGNING_KEY': SECRET_KEY,
     'AUTH_HEADER_TYPES': ('Bearer',),
-    'ACCESS_TOKEN_LIFETIME': env.timedelta('ACCESS_TOKEN_LIFETIME', default=60),
-    'REFRESH_TOKEN_LIFETIME': env.timedelta('REFRESH_TOKEN_LIFETIME', default=86400),
+    # Configurar por segundos vía env o usar defaults
+    'ACCESS_TOKEN_LIFETIME': timedelta(seconds=env.int('ACCESS_TOKEN_LIFETIME_SECONDS', default=60)),
+    'REFRESH_TOKEN_LIFETIME': timedelta(seconds=env.int('REFRESH_TOKEN_LIFETIME_SECONDS', default=86400)),
 }
 
 # ZapSign

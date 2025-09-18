@@ -5,6 +5,7 @@
     <tr>
       <th>Nombre</th>
       <th>Estado</th>
+      <th>Análisis</th>
       <th>Creado</th>
     </tr>
   </thead>
@@ -22,10 +23,16 @@
             'chip--error': d.status === 'error' || d.status === 'failed'
           }"
         >{{ d.status || '—' }}</span>
-        <span class="chip" [ngClass]="riskClass(d.risk_score)" *ngIf="d.has_analysis" style="margin-left:8px;">
-          Score: {{ d.risk_score | number:'1.2-2' }}
-        </span>
-        <span class="chip chip--pending" *ngIf="d.has_analysis === false" style="margin-left:8px;">Sin análisis</span>
+      </td>
+      <td>
+        <ng-container *ngIf="d.has_analysis; else noAnalysis">
+          <span class="chip" [ngClass]="riskClass(d.risk_score)">
+            Score: {{ d.risk_score | number:'1.2-2' }}
+          </span>
+        </ng-container>
+        <ng-template #noAnalysis>
+          <span class="chip chip--pending">Sin análisis</span>
+        </ng-template>
       </td>
       <td style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
         <span>{{ d.created_at | date:'medium' }}</span>

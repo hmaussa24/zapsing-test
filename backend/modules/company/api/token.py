@@ -7,7 +7,6 @@ from typing import Any, Dict, Optional
 
 from django.conf import settings
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework_simplejwt.exceptions import InvalidToken
 
 
 def _b64url_encode(data: bytes) -> str:
@@ -57,19 +56,15 @@ def decode(token: str) -> Optional[Dict[str, Any]]:
 
 
 def company_id_from_request(request) -> Optional[int]:
-    auth = JWTAuthentication()
+    header = request.META.get('HTTP_AUTHORIZATION') or ''
+    if not header.startswith('Bearer '):
+        return None
+    token = header.split(' ', 1)[1]
     try:
-        user_auth = auth.authenticate(request)
-        if not user_auth:
-            # If DRF auth did not attach, decode raw token to get payload
-            header = request.META.get('HTTP_AUTHORIZATION') or ''
-            if not header.startswith('Bearer '):
-                return None
-            validated = auth.get_validated_token(header.split(' ', 1)[1])
-            return int(validated.get('company_id')) if validated else None
-        _user, validated = user_auth
-        return int(validated.get('company_id')) if validated else None
-    except InvalidToken:
+        validated = JWTAuthentication().get_validated_token(token)
+        cid = validated.get('company_id')
+        return int(cid) if cid is not None else None
+    except Exception:
         return None
 
 

@@ -45,6 +45,7 @@ export class DocumentDetailComponent implements OnInit {
   loadingSigners = signal<boolean>(false);
   analysis = signal<DocumentAnalysisDto | null>(null);
   loadingAnalysis = signal<boolean>(false);
+  reanalyzing = signal<boolean>(false);
 
   ngOnInit(): void {
     this.id.set(Number(this.route.snapshot.paramMap.get('id')));
@@ -73,6 +74,19 @@ export class DocumentDetailComponent implements OnInit {
       next: a => this.analysis.set(a),
       complete: () => this.loadingAnalysis.set(false),
       error: () => this.loadingAnalysis.set(false)
+    });
+  }
+
+  reanalyze(): void {
+    this.reanalyzing.set(true);
+    this.api.requestAnalyze(this.id()).subscribe({
+      next: () => {
+        this.snack.open('Reanálisis solicitado', 'OK', { duration: 2000 });
+        // Opcional: refrescar estado de análisis tras un pequeño delay
+        setTimeout(() => this.loadAnalysis(), 1000);
+      },
+      complete: () => this.reanalyzing.set(false),
+      error: () => { this.reanalyzing.set(false); this.snack.open('Error solicitando reanálisis', 'OK', { duration: 2500 }); }
     });
   }
 

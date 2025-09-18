@@ -9,3 +9,6 @@ class EventPublisher(Protocol):
 class DocumentCreatedProcessor(Protocol):
     def process(self, event: DocumentCreatedEvent) -> None: ...
 
+
+ 
+

@@ -28,6 +28,9 @@ class HandleAnalysisWebhookUseCase:
             entities=to_list_any(payload.get('entities', [])),
             risk_score=float(payload.get('risk_score') or 0.0),
             status=(payload.get('status') or None),
+            missing_topics=str(payload.get('missing_topics', 'no definidos')),
+            insights=str(payload.get('insights', 'no definidos')),
+            model_info=(payload.get('model_info') or {}),
         )
 
         existing = self.analysis_queries.get_by_document_id(dto.document_id)

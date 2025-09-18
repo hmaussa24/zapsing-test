@@ -35,6 +35,8 @@ export interface DocumentAnalysisDto {
   entities: Array<{ type: string; value: string }>;
   risk_score: number;
   status?: string | null;
+  missing_topics?: string | null;
+  insights?: string | null;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -72,6 +74,10 @@ export class DocumentApiService {
 
   getAnalysis(id: number): Observable<DocumentAnalysisDto> {
     return this.http.get<DocumentAnalysisDto>(`${this.base}${id}/analysis/`);
+  }
+
+  requestAnalyze(id: number): Observable<void> {
+    return this.http.post<void>(`${this.base}${id}/analyze/`, {});
   }
 }
 

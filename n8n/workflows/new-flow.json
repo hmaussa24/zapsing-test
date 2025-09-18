@@ -1,0 +1,125 @@
+{
+    "name": "Document Analysis (HF Free) - Connected",
+    "nodes": [
+      {
+        "id": "1",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1,
+        "position": [280, 240],
+        "parameters": {
+          "path": "document-analysis",
+          "httpMethod": "POST",
+          "responseMode": "onReceived",
+          "options": {
+            "responseCode": 202
+          }
+        }
+      },
+      {
+        "id": "2",
+        "name": "Extract PDF (Jina)",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [580, 240],
+        "parameters": {
+          "url": "=https://r.jina.ai/http://{{$json[\"body\"][\"pdf_url\"]}}",
+          "method": "GET",
+          "responseFormat": "string"
+        }
+      },
+      {
+        "id": "3",
+        "name": "Build Prompt",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [860, 240],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "language": "JavaScript",
+          "jsCode": "const MAX_CHARS = 12000;\nconst raw = $json.body || '';\nconst content = typeof raw === 'string' ? raw : JSON.stringify(raw);\nconst truncated = content.slice(0, MAX_CHARS);\nconst model = 'HuggingFaceH4/zephyr-7b-beta';\nconst prompt = `Eres un asistente legal. Analiza el siguiente texto de un contrato. Devuelve EXCLUSIVAMENTE un JSON válido con esta forma exacta:\\n{\\n  \"summary\": string,\\n  \"labels\": string[],\\n  \"entities\": [{\"type\": string, \"value\": string}],\\n  \"risk_score\": number,\\n  \"missing_topics\": [{\"topic\": string, \"importance\": \"high\"|\"medium\"|\"low\", \"suggestion\": string, \"confidence\": number}],\\n  \"insights\": [{\"type\": \"risk\"|\"opportunity\"|\"compliance\", \"title\": string, \"description\": string, \"severity\": \"low\"|\"medium\"|\"high\", \"score\": number, \"actions\": string[]}],\\n  \"model_info\": {\"provider\": \"huggingface\", \"model\": \"${model}\"}\\n}\\nSi no estás seguro en algún campo, sé conservador. Texto:\\n---\\n${truncated}\\n---`;\nreturn [{ json: { prompt, model } }];"
+        }
+      },
+      {
+        "id": "4",
+        "name": "HF Inference",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [1140, 240],
+        "parameters": {
+          "url": "=https://api-inference.huggingface.co/models/{{$json[\"model\"]}}",
+          "method": "POST",
+          "authentication": "none",
+          "responseFormat": "string",
+          "jsonParameters": true,
+          "sendBody": true,
+          "options": {
+            "headers": {
+              "Authorization": "Bearer <HF_TOKEN>",
+              "Content-Type": "application/json"
+            }
+          },
+          "bodyParametersJson": "={\"inputs\": $json[\"prompt\"], \"parameters\": {\"max_new_tokens\": 512, \"temperature\": 0.2}}"
+        }
+      },
+      {
+        "id": "5",
+        "name": "Parse JSON",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [1420, 240],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "language": "JavaScript",
+          "jsCode": "function extractJson(str){\n  const m = str.match(/\\{[\\s\\S]*\\}$/);\n  if (m) { try { return JSON.parse(m[0]); } catch(_){} }\n  try { return JSON.parse(str); } catch(_){}\n  return null;\n}\nconst raw = $json;\nlet text = '';\nif (typeof raw === 'string') text = raw;\nelse if (Array.isArray(raw) && raw[0]?.generated_text) text = raw[0].generated_text;\nelse if (raw?.generated_text) text = raw.generated_text;\nelse text = JSON.stringify(raw);\nconst data = extractJson(text) || { summary: '', labels: [], entities: [], risk_score: 0.0, missing_topics: [], insights: [], model_info: { provider: 'huggingface', model: $items(0)[0].json.model || 'unknown' } };\nif (!Array.isArray(data.labels)) data.labels = [];\nif (!Array.isArray(data.entities)) data.entities = [];\nif (!Array.isArray(data.missing_topics)) data.missing_topics = [];\nif (!Array.isArray(data.insights)) data.insights = [];\nif (typeof data.risk_score !== 'number') data.risk_score = 0.0;\nreturn [{ json: data }];"
+        }
+      },
+      {
+        "id": "6",
+        "name": "Callback Backend",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [1700, 240],
+        "parameters": {
+          "method": "POST",
+          "url": "<BACKEND_ANALYSIS_WEBHOOK>",
+          "authentication": "none",
+          "jsonParameters": true,
+          "sendBody": true,
+          "options": {
+            "headers": {
+              "X-Automation-Key": "<AUTOMATION_API_KEY>"
+            }
+          },
+          "bodyParametersJson": "={\n  \"document_id\": {{$json(\"$item(0).$node[\\\"Webhook\\\"].json.body.document_id\")}},\n  \"company_id\": {{$json(\"$item(0).$node[\\\"Webhook\\\"].json.body.company_id\")}},\n  \"summary\": {{$json(\"summary\")}},\n  \"labels\": {{$json(\"labels\")}},\n  \"entities\": {{$json(\"entities\")}},\n  \"risk_score\": {{$json(\"risk_score\")}},\n  \"missing_topics\": {{$json(\"missing_topics\")}},\n  \"insights\": {{$json(\"insights\")}},\n  \"model_info\": {{$json(\"model_info\")}},\n  \"status\": \"done\"\n}"
+        }
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [{ "node": "Extract PDF (Jina)", "type": "main", "index": 0 }]
+        ]
+      },
+      "Extract PDF (Jina)": {
+        "main": [
+          [{ "node": "Build Prompt", "type": "main", "index": 0 }]
+        ]
+      },
+      "Build Prompt": {
+        "main": [
+          [{ "node": "HF Inference", "type": "main", "index": 0 }]
+        ]
+      },
+      "HF Inference": {
+        "main": [
+          [{ "node": "Parse JSON", "type": "main", "index": 0 }]
+        ]
+      },
+      "Parse JSON": {
+        "main": [
+          [{ "node": "Callback Backend", "type": "main", "index": 0 }]
+        ]
+      }
+    }
+  }

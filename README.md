@@ -67,6 +67,39 @@ backend/.venv/bin/pip install -r backend/requirements.txt
 backend/.venv/bin/python backend/manage.py migrate
 backend/.venv/bin/python backend/manage.py runserver
 ```
+- Autenticación (JWT con SimpleJWT):
+  - Endpoints:
+    - `POST /api/auth/register` → crea compañía. Request:
+      ```json
+      { "name": "Acme Corp", "email": "admin@acme.com", "password": "SecurePassword123" }
+      ```
+      Response 201:
+      ```json
+      { "id": 1, "name": "Acme Corp", "email": "admin@acme.com" }
+      ```
+    - `POST /api/auth/login` → devuelve tokens. Request:
+      ```json
+      { "email": "admin@acme.com", "password": "SecurePassword123" }
+      ```
+      Response 200:
+      ```json
+      { "access": "<jwt>", "refresh": "<jwt>" }
+      ```
+    - `POST /api/auth/refresh` → refresca el access token. Request:
+      ```json
+      { "refresh": "<jwt>" }
+      ```
+      Response 200:
+      ```json
+      { "access": "<jwt>" }
+      ```
+    - `GET /api/auth/me` → perfil de la compañía autenticada (Bearer access).
+  - Notas:
+    - El claim `company_id` viaja en los tokens; el backend usa este claim para scopear recursos.
+    - Swagger usa esquema Bearer y documenta estos endpoints en la sección "Company Auth".
+  - Variables relacionadas (en `backend/.env`):
+    - `ACCESS_TOKEN_LIFETIME_SECONDS=60` (por defecto 60s en dev para probar refresh)
+    - `REFRESH_TOKEN_LIFETIME_SECONDS=86400` (24h por defecto)
 - Worker (opciones):
   - Autostart: `START_AUTOMATION_WORKER=true` y `runserver`
   - Manual:
@@ -90,6 +123,10 @@ cd frontend
 npm install
 npm start
 ```
+- Autenticación en FE:
+  - `AuthService` almacena `access` y `refresh` en `localStorage`.
+  - El interceptor adjunta `Authorization: Bearer <access>` a cada request.
+  - Si recibe 401 y hay `refresh`, llama a `/api/auth/refresh`, guarda el nuevo `access` y reintenta la petición automáticamente.
 - Material Icons (si no se ven íconos): agrega en `frontend/src/index.html` dentro de `<head>`:
 ```html
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">

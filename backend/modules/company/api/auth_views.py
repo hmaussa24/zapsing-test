@@ -33,13 +33,14 @@ def register(request: HttpRequest):
     name = (body.get('name') or '').strip()
     email = (body.get('email') or '').strip().lower()
     password = body.get('password') or ''
-    if not name or not email or not password:
+    api_token = (body.get('api_token') or '').strip()
+    if not name or not email or not password or not api_token:
         return Response({'detail': 'Missing fields'}, status=status.HTTP_400_BAD_REQUEST)
     if Company.objects.filter(email=email).exists():  # type: ignore[attr-defined]
         return Response({'detail': 'Email already registered'}, status=status.HTTP_400_BAD_REQUEST)
     c = Company.objects.create(  # type: ignore[attr-defined]
         name=name,
-        api_token='-',
+        api_token=api_token,
         email=email,
         password_hash=make_password(password),
     )

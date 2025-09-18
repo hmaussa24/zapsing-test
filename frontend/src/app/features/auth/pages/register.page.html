@@ -16,6 +16,17 @@
           <mat-label>Contraseña</mat-label>
           <input matInput type="password" formControlName="password" />
         </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>ZapSign API Token</mat-label>
+          <input matInput [type]="hideToken ? 'password' : 'text'" formControlName="api_token" placeholder="Ej: zapsign_************************" />
+          <button mat-icon-button matSuffix type="button" (click)="hideToken = !hideToken" [attr.aria-label]="hideToken ? 'Mostrar token' : 'Ocultar token'">
+            <mat-icon>{{ hideToken ? 'visibility' : 'visibility_off' }}</mat-icon>
+          </button>
+          <mat-hint align="end" style="font-size:12px; color: var(--text-muted, rgba(0,0,0,0.54)); margin-top:2px;">
+            Genera tu token en ZapSign (sandbox):
+            <a href="https://sandbox.app.zapsign.com.br/" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: underline;">Abrir ZapSign</a>
+          </mat-hint>
+        </mat-form-field>
         <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">Registrarse</button>
       </form>
     </mat-card-content>

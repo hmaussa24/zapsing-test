@@ -7,6 +7,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../../shared/services/auth.service';
 import { AuthHeaderComponent } from '../../../shared/components/auth-header/auth-header.component';
 import { AuthFooterComponent } from '../../../shared/components/auth-footer/auth-footer.component';
@@ -14,7 +15,7 @@ import { AuthFooterComponent } from '../../../shared/components/auth-footer/auth
 @Component({
   standalone: true,
   selector: 'app-register-page',
-  imports: [CommonModule, ReactiveFormsModule, MatCardModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatSnackBarModule, AuthHeaderComponent, AuthFooterComponent],
+  imports: [CommonModule, ReactiveFormsModule, MatCardModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatSnackBarModule, MatIconModule, AuthHeaderComponent, AuthFooterComponent],
   templateUrl: './register.page.html'
 })
 export class RegisterPage {
@@ -27,12 +28,15 @@ export class RegisterPage {
     name: ['', [Validators.required, Validators.maxLength(255)]],
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(6)]],
+    api_token: ['', [Validators.required, Validators.minLength(10)]],
   });
+
+  hideToken = true;
 
   submit(): void {
     if (this.form.invalid) return;
-    const { name, email, password } = this.form.value;
-    this.auth.register(name!, email!, password!).subscribe({
+    const { name, email, password, api_token } = this.form.value;
+    this.auth.register(name!, email!, password!, api_token!).subscribe({
       next: () => {
         this.snack.open('Registro exitoso, inicia sesión', 'OK', { duration: 2500 });
         this.router.navigate(['/auth/login']);

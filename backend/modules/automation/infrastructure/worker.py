@@ -38,7 +38,7 @@ def run_worker(url: Optional[str] = None, queue: Optional[str] = None) -> None:
                 name=str(payload['name']),
                 pdf_url=str(payload['pdf_url']),
             )
-            logger.info('Worker received event document_id=%s company_id=%s', ev.document_id, ev.company_id)
+            logger.info('Worker received document_created id=%s', ev.document_id)
             notifier.notify_document_created(
                 document_id=ev.document_id,
                 company_id=ev.company_id,

@@ -9,7 +9,14 @@
       <div *ngIf="analysis; else noAnalysis">
         <p>{{ analysis?.summary }}</p>
         <p><strong>Riesgo:</strong> {{ analysis?.risk_score }}</p>
-        <p><strong>Etiquetas:</strong> <span *ngFor="let l of analysis?.labels; let last = last">{{ l }}<span *ngIf="!last">, </span></span></p>
+        <div *ngIf="analysis?.missing_topics">
+          <h3>Temas faltantes</h3>
+          <pre style="white-space: pre-wrap;">{{ analysis?.missing_topics }}</pre>
+        </div>
+        <div *ngIf="analysis?.insights">
+          <h3>Insights</h3>
+          <pre style="white-space: pre-wrap;">{{ analysis?.insights }}</pre>
+        </div>
       </div>
       <ng-template #noAnalysis>
         <p class="text-muted">Sin análisis disponible aún.</p>

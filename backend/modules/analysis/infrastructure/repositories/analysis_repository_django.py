@@ -19,6 +19,9 @@ class DjangoAnalysisRepository(AnalysisResultCommandRepository, AnalysisResultQu
                 'labels': dto.labels,
                 'entities': dto.entities,
                 'risk_score': dto.risk_score,
+                'missing_topics': dto.missing_topics or [],
+                'insights': dto.insights or [],
+                'model_info': dto.model_info or {},
                 'status': dto.status,
             }
         )
@@ -29,6 +32,9 @@ class DjangoAnalysisRepository(AnalysisResultCommandRepository, AnalysisResultQu
             entities=obj.entities,
             risk_score=obj.risk_score,
             status=obj.status,
+            missing_topics=obj.missing_topics,
+            insights=obj.insights,
+            model_info=obj.model_info,
         )
 
     def get_by_document_id(self, document_id: int) -> Optional[AnalysisResultDTO]:
@@ -43,5 +49,8 @@ class DjangoAnalysisRepository(AnalysisResultCommandRepository, AnalysisResultQu
             entities=obj.entities,
             risk_score=obj.risk_score,
             status=obj.status,
+            missing_topics=obj.missing_topics,
+            insights=obj.insights,
+            model_info=obj.model_info,
         )
 
