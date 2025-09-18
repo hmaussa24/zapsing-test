@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models.functions import Lower
 
 
 class Company(models.Model):
@@ -11,5 +12,11 @@ class Company(models.Model):
 
     class Meta:
         db_table = 'company'
+        constraints = [
+            models.UniqueConstraint(Lower('email'), name='uniq_company_email_ci')
+        ]
+        indexes = [
+            models.Index(Lower('email'), name='idx_company_email_ci')
+        ]
 
 

@@ -30,6 +30,86 @@ services:
       RABBITMQ_DEFAULT_PASS: zapsign
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+    container_name: zapsign-backend
+    environment:
+      DJANGO_SECRET_KEY: insecure-dev-key
+      DJANGO_DEBUG: "True"
+      ALLOWED_HOSTS: 127.0.0.1,localhost,.ngrok-free.app,backend
+      CSRF_TRUSTED_ORIGINS: https://.ngrok-free.app
+      DATABASE_URL: postgres://zapsign:password@db:5432/zapsign
+      ZAPSIGN_API_BASE: https://sandbox.api.zapsign.com.br/api/v1
+      ZAPSIGN_AUTH_SCHEME: Bearer
+      AUTOMATION_API_KEY: key-secret-val-change-please
+      RABBITMQ_URL: amqp://zapsign:zapsign@rabbitmq:5672/%2F
+      AUTOMATION_QUEUE: document_created
+      START_AUTOMATION_WORKER: "true"
+      ACCESS_TOKEN_LIFETIME_SECONDS: 60
+      REFRESH_TOKEN_LIFETIME_SECONDS: 86400
+      N8N_WEBHOOK_URL: https://hmaussa1.app.n8n.cloud/webhook/document-analysis
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: ./backend
+    container_name: zapsign-worker
+    command: ["python", "manage.py", "run_automation_worker"]
+    environment:
+      DJANGO_SECRET_KEY: insecure-dev-key
+      DJANGO_DEBUG: "True"
+      ALLOWED_HOSTS: 127.0.0.1,localhost,.ngrok-free.app
+      CSRF_TRUSTED_ORIGINS: https://.ngrok-free.app
+      DATABASE_URL: postgres://zapsign:password@db:5432/zapsign
+      ZAPSIGN_API_BASE: https://sandbox.api.zapsign.com.br/api/v1
+      ZAPSIGN_AUTH_SCHEME: Bearer
+      AUTOMATION_API_KEY: key-secret-val-change-please
+      RABBITMQ_URL: amqp://zapsign:zapsign@rabbitmq:5672/%2F
+      AUTOMATION_QUEUE: document_created
+      START_AUTOMATION_WORKER: "true"
+      ACCESS_TOKEN_LIFETIME_SECONDS: 60
+      REFRESH_TOKEN_LIFETIME_SECONDS: 86400
+      N8N_WEBHOOK_URL: https://hmaussa1.app.n8n.cloud/webhook/document-analysis
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: zapsign-frontend
+    ports:
+      - "4200:4200"
+    environment:
+      API_BASE_URL: http://backend:8000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
     restart: unless-stopped
 
 volumes:

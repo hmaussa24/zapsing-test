@@ -103,6 +103,7 @@ class HttpZapSignClient(ZapSignClient):
             'url_pdf': pdf_url,
             'url': pdf_url,
             'signers': signers,
+            "send_automatic_email": True,
         }
 
         def _mask(token: str) -> str:
