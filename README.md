@@ -10,9 +10,28 @@ docker compose build --no-cache
 docker compose up -d
 ```
 
-2) Configurar n8n (requerido para análisis de documentos)
+2) Ejecutar migraciones de la base de datos
+```bash
+docker compose exec backend python manage.py migrate
+```
+
+3) Configurar webhook de ZapSign con ngrok
+- Instalar ngrok: https://ngrok.com/download
+- En una terminal separada, crear túnel hacia el backend local:
+  ```bash
+  ngrok http 8000
+  ```
+- Copiar la URL HTTPS generada (ej: `https://abc123.ngrok-free.app`)
+- En la plataforma ZapSign (https://sandbox.zapsign.com.br):
+  - Ir a "Configurações" → "Webhooks"
+  - Crear nuevo webhook con la URL: `https://abc123.ngrok-free.app/api/webhooks/zapsign/`
+  - Seleccionar eventos: "Documento assinado", "Documento rejeitado", etc.
+  - Guardar la configuración
+- **Importante**: Mantener ngrok corriendo durante el desarrollo para recibir webhooks
+
+4) Configurar n8n (requerido para análisis de documentos)
 - Acceder a n8n: http://localhost:5678
-- Usuario: `admin` / Contraseña: `admin123`
+- Registrar y llenar los datos que pide N8N
 - Crear cuenta y configurar:
   - Ir a "Workflows" → "Import from file"
   - Importar el archivo `n8n/workflows/local-zapsing-ia.json`
@@ -23,14 +42,15 @@ docker compose up -d
     - En "Credentials", configurar la API key de Google Gemini
     - Guardar y activar el workflow
 
-3) Endpoints y accesos
+5) Endpoints y accesos
 - Frontend: http://localhost:4200
 - Backend (API): http://localhost:8000
 - Swagger UI: http://localhost:8000/api/docs/
 - RabbitMQ UI: http://localhost:15672 (user/pass: zapsign/zapsign)
 - n8n: http://localhost:5678 (user/pass: admin/admin123)
+- ngrok: URL HTTPS generada (ej: https://abc123.ngrok-free.app)
 
-4) Variables de entorno (ya definidas en docker-compose.yml)
+6) Variables de entorno (ya definidas en docker-compose.yml)
 - Backend:
   - `DJANGO_SECRET_KEY`: insecure-dev-key (dev)
   - `DJANGO_DEBUG`: "True"
@@ -55,9 +75,14 @@ Notas:
 
 Comandos útiles
 ```bash
+# Docker
 docker compose logs -f backend
 docker compose restart frontend backend worker
 docker compose down
+
+# ngrok (en terminal separada)
+ngrok http 8000
+# Ver tráfico de webhooks en: http://localhost:4040
 ```
 
 ---
